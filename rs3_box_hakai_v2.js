@@ -9,6 +9,8 @@
 (function () {
   'use strict';
 
+  const global = window;
+
   // =========================================================
   // 1. HTML生成
   // =========================================================
@@ -182,15 +184,39 @@
 
   /**
    * フォーメーションのスロット（1〜5）にいるキャラの「分身剣レベル」を返す。
-   * ※ここはプロジェクトの実データ仕様に合わせて実装し直してください。
-   *   ひとまず安全側として 0 を返すダミーにしてあります。
+   * rs3_rta_v2_bunshin_link.js 側のロジックを再利用し、重複定義による齟齬を防ぐ。
+   *
+   * もし bunshin_link が未読み込みの場合のみ、同じマッピングに基づく簡易 DOM 参照でフォールバックする。
    */
   function getSwordLevelForSlot(slotIndex) {
-    // TODO: kidou.html ＋ rs3_rta_v2_char_param.js の仕様に合わせて実装する。
-    // 例：
-    //   const input = document.querySelector(`.sword-input[data-form-slot="${slotIndex}"]`);
-    //   return input ? Number(input.value) || 0 : 0;
-    return 0;
+    if (global.rs3_rta_v2_bunshin_link &&
+        typeof global.rs3_rta_v2_bunshin_link.getSwordForSlot === "function") {
+      const v = global.rs3_rta_v2_bunshin_link.getSwordForSlot(slotIndex);
+      return Number.isFinite(v) && v > 0 ? Math.floor(v) : 0;
+    }
+
+    // ---- フォールバック：DOM直参照（bunshin_link の PARTY_ROLES と同一マッピング）
+    const SWORD_INPUT_ID_BY_ROLE = {
+      A: "sword-main",
+      B: "sword-ally1",
+      C: "sword-ally2",
+      D: "sword-ally3",
+      E: "sword-ally4"
+    };
+
+    const sel = document.getElementById("formation-slot-" + slotIndex);
+    if (!sel) return 0;
+
+    const roleId = sel.value; // "", "A"〜"E"
+    const swordId = SWORD_INPUT_ID_BY_ROLE[roleId];
+    if (!swordId) return 0;
+
+    const input = document.getElementById(swordId);
+    if (!input) return 0;
+
+    const v = Number(input.value);
+    if (!Number.isFinite(v) || v < 0) return 0;
+    return Math.floor(v);
   }
 
   // =========================================================
@@ -655,6 +681,12 @@
     // 生成後にロジック初期化
     initHakaiLogic();
   }
+
+  // 乱数幅テーブルの再構築だけを外部から呼び出せるように公開
+  global.rs3_box_hakai_v2 = global.rs3_box_hakai_v2 || {};
+  global.rs3_box_hakai_v2.refreshPatternTable = function () {
+    rebuildPatternDamageTable();
+  };
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initHakaiBoxFromJs);

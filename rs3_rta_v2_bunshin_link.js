@@ -209,6 +209,12 @@
     return getIntFromInput(input);
   }
 
+  function getSwordLevelForFormationSlot(slotIndex) {
+    const roleId = formationState[slotIndex];
+    if (!roleId) return null;
+    return getSwordLevelForPartyRole(roleId);
+  }
+
   function isBunshinBoxAvailable() {
     return !!(global.rs3_box_bunshin_pat_v2 &&
               typeof global.rs3_box_bunshin_pat_v2.setSlot === "function" &&
@@ -216,31 +222,35 @@
   }
 
   function recalcAllBunshinDamage() {
-    if (!isBunshinBoxAvailable()) {
-      return;
+    const bunshinAvailable = isBunshinBoxAvailable();
+    const api = bunshinAvailable ? global.rs3_box_bunshin_pat_v2 : null;
+
+    if (bunshinAvailable && api) {
+      FORMATION_INDEXES.forEach(function (slotIndex) {
+        const roleId = formationState[slotIndex];
+
+        if (!roleId) {
+          api.clearSlot(slotIndex);
+          return;
+        }
+
+        const swordLv = getSwordLevelForPartyRole(roleId);
+
+        if (swordLv == null) {
+          api.clearSlot(slotIndex);
+          return;
+        }
+
+        api.setSlot(slotIndex, {
+          swordLevel: swordLv
+        });
+      });
     }
 
-    const api = global.rs3_box_bunshin_pat_v2;
-
-    FORMATION_INDEXES.forEach(function (slotIndex) {
-      const roleId = formationState[slotIndex];
-
-      if (!roleId) {
-        api.clearSlot(slotIndex);
-        return;
-      }
-
-      const swordLv = getSwordLevelForPartyRole(roleId);
-
-      if (swordLv == null) {
-        api.clearSlot(slotIndex);
-        return;
-      }
-
-      api.setSlot(slotIndex, {
-        swordLevel: swordLv
-      });
-    });
+    if (global.rs3_box_hakai_v2 &&
+        typeof global.rs3_box_hakai_v2.refreshPatternTable === "function") {
+      global.rs3_box_hakai_v2.refreshPatternTable();
+    }
   }
 
   // ==========================================================
@@ -321,7 +331,8 @@
       return copy;
     },
     recalc: recalcAllBunshinDamage,
-    rebuildFormationSelects: rebuildAllFormationSelects
+    rebuildFormationSelects: rebuildAllFormationSelects,
+    getSwordForSlot: getSwordLevelForFormationSlot
   };
 
 })(this);
