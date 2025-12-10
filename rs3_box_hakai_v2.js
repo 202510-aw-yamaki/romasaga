@@ -645,8 +645,8 @@
   // =========================================================
 
   function initHakaiBoxFromJs() {
-    // HTML側は <div id="rta-v2-bottom"></div> だけ残しておいてください。
-    var root = document.getElementById('rta-v2-bottom');
+    // HTML側は <div id="hakai-bottom-root"></div> だけ残しておいてください。
+    var root = document.getElementById('hakai-bottom-root');
     if (!root) return;
 
     // 中身を JS でまるごと生成
