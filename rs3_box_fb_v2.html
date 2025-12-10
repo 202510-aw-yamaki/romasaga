@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>フォル＆ビュネ HP ブロック</title>
+  <link rel="stylesheet" href="rs3_box_fb_v2.css">
+</head>
+<body>
+
+  <!-- フォル＆ビュネ HP ブロック（BOTTOM 468×108） -->
+  <!-- 開発メモ：
+       ・ID/クラスは rs3_rta_c5.html のボスHPエリアを踏襲
+         - boss-fb-area / boss-forneus / boss-byunei
+         - forneus-max-hp / forneus-damage / forneus-remaining / forneus-last-damage
+         - byunei-max-hp / byunei-damage / byunei-remaining / byunei-last-damage
+         - forneus-otomo-level-display / byunei-otomo-level-display
+       ・本ファイル単体で 468×108 の箱として完結
+       ・将来 rs3_rta_v2_kidou.js 側からこれらのIDにアクセスする想定
+  -->
+
+  <!-- 下段スロット用コンテナ -->
+  <div id="rta-v2-bottom">
+
+    <div id="boss-fb-area">
+      <div class="boss-wrapper">
+
+        <!-- フォル -->
+        <div class="boss-box" id="boss-forneus">
+          <div class="boss-title">
+            フォル
+            <span class="otomo-label">
+              お供レベル：<span id="forneus-otomo-level-display">0</span>
+            </span>
+          </div>
+
+          <div class="boss-row-text">
+            最大HP:
+            <span class="boss-hp-static" id="forneus-max-hp">28000</span>
+  <!-- 見えないダミーボタン（位置調整用） -->
+             <button type="button"
+             class="boss-btn boss-btn-space"
+             aria-hidden="true"
+             tabindex="-1"></button>
+            <button type="button" class="boss-btn" id="forneus-return">リターン</button>
+          </div>
+
+          <div class="boss-row-text">
+            <label>ダメージ入力：
+              <input type="text"
+                     id="forneus-damage"
+                     class="boss-dmg-input"
+                     inputmode="numeric"
+                     pattern="[0-9]*"
+                     value="">
+            </label>
+          </div>
+
+          <div class="boss-remaining">
+            残りHP:
+            <span id="forneus-remaining" class="boss-remaining-value">28000</span>
+            <span class="boss-last-damage-label">直前<br>ダメージ:</span>
+            <span id="forneus-last-damage" class="boss-last-damage-value">0000</span>
+          </div>
+        </div>
+
+        <!-- ビュネ -->
+        <div class="boss-box" id="boss-byunei">
+          <div class="boss-title">
+            ビュネ
+            <span class="otomo-label">
+              お供レベル：<span id="byunei-otomo-level-display">0</span>
+            </span>
+          </div>
+
+          <div class="boss-row-text">
+            最大HP:
+            <span class="boss-hp-static" id="byunei-max-hp">9000</span>
+  <!-- 見えないダミーボタン（位置調整用） -->
+            <button type="button"
+             class="boss-btn boss-btn-space"
+             aria-hidden="true"
+             tabindex="-1"></button>
+            <button type="button" class="boss-btn" id="byunei-return">リターン</button>
+          </div>
+
+          <div class="boss-row-text">
+            <label>ダメージ入力：
+              <input type="text"
+                     id="byunei-damage"
+                     class="boss-dmg-input"
+                     inputmode="numeric"
+                     pattern="[0-9]*"
+                     value="">
+            </label>
+          </div>
+
+          <div class="boss-remaining">
+            残りHP:
+            <span id="byunei-remaining" class="boss-remaining-value">9000</span>
+            <span class="boss-last-damage-label">直前<br>ダメージ:</span>
+            <span id="byunei-last-damage" class="boss-last-damage-value">0000</span>
+          </div>
+        </div>
+
+      </div><!-- /.boss-wrapper -->
+    </div><!-- /#boss-fb-area -->
+
+  </div><!-- /#rta-v2-bottom -->
+
+  <script src="rs3_box_fb_v2.js"></script>
+</body>
+</html>

@@ -1,0 +1,229 @@
+/* キャラスロット＋お供レベル制御ブロック（300×255） */
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont,
+               "Yu Gothic", "メイリオ", sans-serif;
+  font-size: 14px;
+}
+
+/* 左上メインスロット用コンテナ */
+#rta-v2-top-lm {
+  width: 300px;
+  height: 254.5px;
+  box-sizing: border-box; 
+  /* v2本体側で枠線を管理するのでここでは付けない */
+  /* border: 1px solid #444; */
+  padding: 0;
+  display: flex;
+  align-items: stretch;
+  justify-content: stretch;
+}
+
+/* キャラスロットテーブル全体 */
+.rta-v2-char-table {
+  width: 100%;
+  height: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+/* 表全体の枠線（外枠＋内枠） */
+.rta-v2-char-table,
+.rta-v2-char-table th,
+.rta-v2-char-table td {
+  border: 1px solid #444;
+  box-sizing: border-box;
+}
+
+/* ヘッダ行：高さ24px、背景色はお供ヘッダと同色 */
+.rta-v2-char-table thead th {
+  height: 24px;
+  padding: 0 2px;
+  font-weight: bold;
+  font-size: 14px;
+  text-align: center;
+  white-space: nowrap;
+  background-color: #eef3ff;
+}
+
+/* 列幅：138 + 82 + 80 = 300 */
+.rta-v2-char-table .col-role {
+  width: 138px;
+}
+
+.rta-v2-char-table .col-a{
+  width: 82px;
+}
+.rta-v2-char-table .col-b {
+  width: 80px;
+}
+
+/* 本文行（7行×33px = 231px） */
+.rta-v2-char-table tbody td {
+  height: 33px;
+  padding: 0 2px;
+  vertical-align: middle;
+  box-sizing: border-box;
+}
+
+/* 役割＋キャラ選択セル */
+.char-name-cell {
+  padding: 0 2px;
+  text-align: center;          /* セル全体としては中央寄せ */
+}
+
+.char-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;     /* ラベル＋セレクトをセル中央に寄せる */
+  gap: 1px;
+}
+
+.char-role-label {
+  display: inline-block;
+  min-width: 24px;
+  margin-right: 0;
+}
+
+/* セレクトボックス（キャラ名／お供） */
+.char-select {
+  font-size: 12px;
+  padding: 1px 2px;
+  box-sizing: border-box;
+  width: 90px;                 /* 138px のセル内で折り返さない程度に抑える */
+}
+/* 主＋仲キャラのセレクトボックスは 74px にする */
+.rta-v2-char-row-main .char-select {
+  width: 80px;
+}
+
+/* 数値入力＋スピンボタン横並び */
+.spin-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end; /* 右寄せでセル内に収める */
+  gap: 1px;
+}
+
+/* 数値入力（剣レベル／JP／お供HP） */
+.num-input {
+  width: 40px; /* セル幅80pxに収まるよう縮小 */
+  box-sizing: border-box;
+  padding: 1px 2px;
+  font-size: 12px;
+  text-align: center;
+  -moz-appearance: textfield;   /* ★ Firefoxの内蔵スピンを消す */
+}
+
+/* スピンボタン（▲▼） */
+.spin-btn {
+  font-size: 10px;
+  padding: 1px 2px;
+  min-width: 14px;
+  box-sizing: border-box;
+}
+
+/* お供ヘッダ行 */
+.rta-v2-char-row-otomo-header td {
+  font-size: 11px;
+  font-weight: bold;
+  background-color: #eef3ff;
+}
+
+.otomo-header-cell {
+  text-align: center;
+}
+
+.support-hp-header {
+  text-align: center;
+}
+
+.support-reset-header {
+  text-align: center;
+}
+
+/* お供リセットボタン */
+.support-reset-btn {
+  font-size: 11px;
+  padding: 2px 6px;
+  box-sizing: border-box;
+}
+
+/* お供LV表示まわり */
+.support-lv-label {
+  margin-right: 2px;
+  font-size: 11px;
+}
+
+#support-lv {
+  display: inline-block;
+  min-width: 20px;
+  text-align: right;
+}
+
+/* 行種別：主＋仲はすべて同じ背景色に統一 */
+.rta-v2-char-row-main td {
+  background-color: #ffffff;
+}
+
+/* お供行の背景色 */
+.rta-v2-char-row-otomo td {
+  background-color: #f5f8ff;
+}
+
+/* Chrome / Edge / Safari：数値入力の内蔵スピンを消す */
+.num-input::-webkit-outer-spin-button,
+.num-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* キャラ名の前に表示する「アイコン置き場」 */
+.crown-icon {
+  display: inline-block;
+  width: 25px;     /* アイコンの表示枠（横） */
+  height: 25px;    /* アイコンの表示枠（縦） */
+  box-sizing: content-box;
+
+  /* 後から background-image を差し替える前提 */
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 25px 25px;
+
+  /* レイアウト時に縮ませない */
+  flex-shrink: 0;
+}
+
+.crown-icon {
+  display: inline-block;
+  width: 25px;
+  height: 25px;
+  vertical-align: middle;
+  margin-right: 2px;
+  /* ここでは背景画像は指定しない */
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center center;
+  box-sizing: border-box;
+}
+
+/* 分身剣「適正なし」アイコン */
+.crown-icon.icon-nolight {
+  background-image: url("nolight.png");
+}
+
+/* 分身剣「王冠あり」アイコン */
+.crown-icon.icon-crown {
+  background-image: url("oukan.png");
+}
+
+/* 「何もなし」用。25×25の空枠だけにしたい場合 */
+.crown-icon.icon-empty {
+  background-image: none;
+}

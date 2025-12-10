@@ -1,0 +1,1133 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>RTA本体レイアウト（v2起動・統合版）</title>
+
+  <!-- 本体レイアウトCSS -->
+  <link rel="stylesheet" href="rs3_rta_v2_kidou.css">
+
+  <!-- ミニブロックCSS -->
+  <link rel="stylesheet" href="rs3_box_char_v2.css">
+  <link rel="stylesheet" href="rs3_box_spark_v2.css">
+  <link rel="stylesheet" href="rs3_box_fm_v2.css">
+  <link rel="stylesheet" href="rs3_box_tlist_v2.css">
+  <link rel="stylesheet" href="rs3_box_bunshin_pat_v2.css">
+  <link rel="stylesheet" href="rs3_box_fb_v2.css">
+  <link rel="stylesheet" href="rs3_box_hakai_v2.css">
+</head>
+<body>
+
+  <!--
+    開発メモ：
+    ・class="layout-hp-normal" : HP>0（通常モード）
+    ・class="layout-hp-zero"   : HP<=0（HP0モード）
+    を body 直下の #rta-v2-root に付け替えて表示を確認してください。
+  -->
+  <div id="rta-v2-root" class="layout-hp-normal">
+
+    <!-- 上段：左（メイン＋サブ）＋右 -->
+    <div class="rta-v2-top-row">
+
+      <!-- 左列：メイン＋サブ -->
+      <div class="rta-v2-top-left">
+
+        <!-- 左上メイン：キャラ＋お供レベル -->
+        <div id="rta-v2-top-lm">
+          <div class="rta-v2-inner-block block-char-otomo">
+            <table class="rta-v2-char-table">
+                  <thead>
+                    <tr>
+                      <!-- A列：見出し上は空欄 -->
+                      <th class="col-role"></th>
+                      <!-- B列：剣レベル -->
+                      <th class="col-a">剣レベ</th>
+                      <!-- C列：JP -->
+                      <th class="col-b">JP</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+
+                    <!-- 行2：主 -->
+                    <tr class="rta-v2-char-row-main">
+                      <td class="char-name-cell">
+                        <div class="char-cell">
+                          <span class="char-role-label">主:</span>
+			  <span class="crown-icon"></span>
+                          <select class="char-select" id="char-main">
+                            <option value="">選択なし</option>
+                            <option value="hero1">主人公A</option>
+                            <option value="hero2">主人公B</option>
+                          </select>
+                        </div>
+                      </td>
+                      <td>
+                        <div class="spin-wrap">
+                          <input
+                            type="number"
+                            class="num-input sword-input"
+                            id="sword-main"
+                            min="0"
+                            max="50"
+                            value="0"
+                            step="1"
+                            aria-label="主人公の剣レベル">
+                          <button type="button" class="spin-btn spin-up">▲</button>
+                          <button type="button" class="spin-btn spin-down">▼</button>
+                        </div>
+                      </td>
+                      <td>
+                        <div class="spin-wrap">
+                          <input
+                            type="number"
+                            class="num-input jp-input"
+                            id="jp-main"
+                            min="0"
+                            max="50"
+                            value="0"
+                            step="1"
+                            aria-label="主人公のJP">
+                          <button type="button" class="spin-btn spin-up">▲</button>
+                          <button type="button" class="spin-btn spin-down">▼</button>
+                        </div>
+                      </td>
+                    </tr>
+
+                    <!-- 行3：仲 -->
+                    <tr class="rta-v2-char-row-main">
+                      <td class="char-name-cell">
+                        <div class="char-cell">
+                          <span class="char-role-label">仲:</span>
+			  <span class="crown-icon"></span>
+                          <select class="char-select" id="char-ally1">
+                            <option value="">選択なし</option>
+                            <option value="ally1a">仲間1A</option>
+                            <option value="ally1b">仲間1B</option>
+                          </select>
+                        </div>
+                      </td>
+                      <td>
+                        <div class="spin-wrap">
+                          <input
+                            type="number"
+                            class="num-input sword-input"
+                            id="sword-ally1"
+                            min="0"
+                            max="50"
+                            value="0"
+                            step="1"
+                            aria-label="仲間１の剣レベル">
+                          <button type="button" class="spin-btn spin-up">▲</button>
+                          <button type="button" class="spin-btn spin-down">▼</button>
+                        </div>
+                      </td>
+                      <td>
+                        <div class="spin-wrap">
+                          <input
+                            type="number"
+                            class="num-input jp-input"
+                            id="jp-ally1"
+                            min="0"
+                            max="50"
+                            value="0"
+                            step="1"
+                            aria-label="仲間１のJP">
+                          <button type="button" class="spin-btn spin-up">▲</button>
+                          <button type="button" class="spin-btn spin-down">▼</button>
+                        </div>
+                      </td>
+                    </tr>
+
+                    <!-- 行4：仲 -->
+                    <tr class="rta-v2-char-row-main">
+                      <td class="char-name-cell">
+                        <div class="char-cell">
+                          <span class="char-role-label">仲:</span>
+ 			  <span class="crown-icon"></span>
+                          <select class="char-select" id="char-ally2">
+                            <option value="">選択なし</option>
+                            <option value="ally2a">仲間2A</option>
+                            <option value="ally2b">仲間2B</option>
+                          </select>
+                        </div>
+                      </td>
+                      <td>
+                        <div class="spin-wrap">
+                          <input
+                            type="number"
+                            class="num-input sword-input"
+                            id="sword-ally2"
+                            min="0"
+                            max="50"
+                            value="0"
+                            step="1"
+                            aria-label="仲間２の剣レベル">
+                          <button type="button" class="spin-btn spin-up">▲</button>
+                          <button type="button" class="spin-btn spin-down">▼</button>
+                        </div>
+                      </td>
+                      <td>
+                        <div class="spin-wrap">
+                          <input
+                            type="number"
+                            class="num-input jp-input"
+                            id="jp-ally2"
+                            min="0"
+                            max="50"
+                            value="0"
+                            step="1"
+                            aria-label="仲間２のJP">
+                          <button type="button" class="spin-btn spin-up">▲</button>
+                          <button type="button" class="spin-btn spin-down">▼</button>
+                        </div>
+                      </td>
+                    </tr>
+
+                    <!-- 行5：仲 -->
+                    <tr class="rta-v2-char-row-main">
+                      <td class="char-name-cell">
+                        <div class="char-cell">
+                          <span class="char-role-label">仲:</span>
+			  <span class="crown-icon"></span>
+                          <select class="char-select" id="char-ally3">
+                            <option value="">選択なし</option>
+                            <option value="ally3a">仲間3A</option>
+                            <option value="ally3b">仲間3B</option>
+                          </select>
+                        </div>
+                      </td>
+                      <td>
+                        <div class="spin-wrap">
+                          <input
+                            type="number"
+                            class="num-input sword-input"
+                            id="sword-ally3"
+                            min="0"
+                            max="50"
+                            value="0"
+                            step="1"
+                            aria-label="仲間３の剣レベル">
+                          <button type="button" class="spin-btn spin-up">▲</button>
+                          <button type="button" class="spin-btn spin-down">▼</button>
+                        </div>
+                      </td>
+                      <td>
+                        <div class="spin-wrap">
+                          <input
+                            type="number"
+                            class="num-input jp-input"
+                            id="jp-ally3"
+                            min="0"
+                            max="50"
+                            value="0"
+                            step="1"
+                            aria-label="仲間３のJP">
+                          <button type="button" class="spin-btn spin-up">▲</button>
+                          <button type="button" class="spin-btn spin-down">▼</button>
+                        </div>
+                      </td>
+                    </tr>
+
+                    <!-- 行6：仲 -->
+                    <tr class="rta-v2-char-row-main">
+                      <td class="char-name-cell">
+                        <div class="char-cell">
+                          <span class="char-role-label">仲:</span>
+			  <span class="crown-icon"></span>
+                          <select class="char-select" id="char-ally4">
+                            <option value="">選択なし</option>
+                            <option value="ally4a">仲間4A</option>
+                            <option value="ally4b">仲間4B</option>
+                          </select>
+                        </div>
+                      </td>
+                      <td>
+                        <div class="spin-wrap">
+                          <input
+                            type="number"
+                            class="num-input sword-input"
+                            id="sword-ally4"
+                            min="0"
+                            max="50"
+                            value="0"
+                            step="1"
+                            aria-label="仲間４の剣レベル">
+                          <button type="button" class="spin-btn spin-up">▲</button>
+                          <button type="button" class="spin-btn spin-down">▼</button>
+                        </div>
+                      </td>
+                      <td>
+                        <div class="spin-wrap">
+                          <input
+                            type="number"
+                            class="num-input jp-input"
+                            id="jp-ally4"
+                            min="0"
+                            max="50"
+                            value="0"
+                            step="1"
+                            aria-label="仲間４のJP">
+                          <button type="button" class="spin-btn spin-up">▲</button>
+                          <button type="button" class="spin-btn spin-down">▼</button>
+                        </div>
+                      </td>
+                    </tr>
+
+                    <!-- 行7：お供LVチェック ヘッダ行 -->
+                    <tr class="rta-v2-char-row-otomo-header">
+                      <td class="char-name-cell otomo-header-cell">
+                        <span class="char-role-label">お供LVチェック</span>
+                      </td>
+                      <td class="support-hp-header">
+                        HP
+                      </td>
+                      <td class="support-reset-header">
+                        <button type="button" class="support-reset-btn">
+                          リセット
+                        </button>
+                      </td>
+                    </tr>
+
+                    <!-- 行8：お供行（供：キャラスロット＋HP＋お供LV） -->
+                    <tr class="rta-v2-char-row-otomo">
+                      <td class="char-name-cell">
+                        <div class="char-cell">
+                          <span class="char-role-label">供:</span>
+                          <select class="char-select" id="support-char">
+                            <!-- 本番では rs3chrparam.js から
+                                 ハーマン／タチアナのみを取得する想定 -->
+                            <option value="herman">ハーマン</option>
+                            <option value="tatiana">タチアナ</option>
+                          </select>
+                        </div>
+                      </td>
+                      <td>
+                        <div class="spin-wrap">
+                          <input
+                            type="number"
+                            class="num-input"
+                            id="support-hp"
+                            min="0"
+                            max="999"
+                            value="210"
+                            step="15"
+                            aria-label="お供の現在HP">
+                          <button type="button" class="spin-btn spin-up">▲</button>
+                          <button type="button" class="spin-btn spin-down">▼</button>
+                        </div>
+                      </td>
+                      <td>
+                        <span class="support-lv-label">お供LV:</span>
+                        <span id="support-lv">0</span>
+                      </td>
+                    </tr>
+
+                  </tbody>
+                </table>
+          </div>
+        </div>
+
+        <!-- 左上サブ：SPARK / FORMATION（HP状態で切替） -->
+        <div id="rta-v2-top-ls">
+          <!-- HP>0：分身剣閃きブロック -->
+          <div class="rta-v2-inner-block block-spark">
+            <table class="spark-outer">
+                  <thead>
+                    <tr>
+                      <th colspan="3" class="spark-title">
+                        分身剣閃き確率
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <!-- 本体は colspan=3 の中に内部テーブルを持つ -->
+                      <td colspan="3" class="spark-container-cell">
+                        <table class="spark-inner">
+                          <tbody>
+                            <!-- 対フォル：2行（王冠 有／王冠 無） -->
+                            <tr>
+                              <td class="spark-label" rowspan="2">対フォル</td>
+                              <td class="spark-row" rowspan="2">
+                                閃き回数
+                                <span class="spin-box">
+                                  <input
+                                    type="number"
+                                    class="num-input spark-count-input"
+                                    id="spark-count-forneus"
+                                    min="0"
+                                    max="8"
+                                    value="0"
+                                    step="1"
+                                    aria-label="対フォルの閃き回数">
+                                  <div class="spin-buttons">
+                                    <button type="button" class="spin-btn spin-up">▲</button>
+                                    <button type="button" class="spin-btn spin-down">▼</button>
+                                  </div>
+                                </span>
+                              </td>
+                              <td class="spark-row">
+                                <span class="spark-crown-label">王冠 有</span>
+                                <span class="spark-rate" id="spark-rate-forneus-crown">0.00%</span>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td class="spark-row">
+                                <span class="spark-crown-label">王冠 無</span>
+                                <span class="spark-rate" id="spark-rate-forneus-nocrown">0.00%</span>
+                              </td>
+                            </tr>
+
+                            <!-- 対ビュネ：1行（王冠 無 のみ） -->
+                            <tr>
+                              <td class="spark-label">対ビュネ</td>
+                              <td class="spark-row">
+                                閃き回数
+                                <span class="spin-box">
+                                  <input
+                                    type="number"
+                                    class="num-input spark-count-input"
+                                    id="spark-count-byunei"
+                                    min="0"
+                                    max="8"
+                                    value="0"
+                                    step="1"
+                                    aria-label="対ビュネの閃き回数">
+                                  <div class="spin-buttons">
+                                    <button type="button" class="spin-btn spin-up">▲</button>
+                                    <button type="button" class="spin-btn spin-down">▼</button>
+                                  </div>
+                                </span>
+                              </td>
+                              <td class="spark-row">
+                                <span class="spark-crown-label">王冠 無</span>
+                                <span class="spark-rate" id="spark-rate-byunei-nocrown">0.00%</span>
+                              </td>
+                            </tr>
+
+                          </tbody>
+                        </table>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+          </div>
+
+          <!-- HP<=0：陣形スロットブロック -->
+          <div class="rta-v2-inner-block block-formation">
+            <div class="formation-block">
+                  <div class="formation-title">陣形配置</div>
+
+                  <div class="formation-grid">
+              <!-- 上から ④ → ② → ① → ③ → ⑤ のくの字配置 -->
+
+              <!-- ④：一番上・右寄せ -->
+              <div class="formation-cell formation-cell-4">
+                <span class="formation-label">④</span>
+                <select id="formation-slot-4" class="formation-select">
+                  <option value="">キャラ名</option>
+                </select>
+              </div>
+
+              <!-- ②：上から2つ目・やや右寄せ -->
+              <div class="formation-cell formation-cell-2">
+                <span class="formation-label">②</span>
+                <select id="formation-slot-2" class="formation-select">
+                  <option value="">キャラ名</option>
+                </select>
+              </div>
+
+              <!-- ①：中央・左寄せ -->
+              <div class="formation-cell formation-cell-1">
+                <span class="formation-label">①</span>
+                <select id="formation-slot-1" class="formation-select">
+                  <option value="">キャラ名</option>
+                </select>
+              </div>
+
+              <!-- ③：下から2つ目・やや右寄せ -->
+              <div class="formation-cell formation-cell-3">
+                <span class="formation-label">③</span>
+                <select id="formation-slot-3" class="formation-select">
+                  <option value="">キャラ名</option>
+                </select>
+              </div>
+
+              <!-- ⑤：一番下・右寄せ -->
+              <div class="formation-cell formation-cell-5">
+                <span class="formation-label">⑤</span>
+                <select id="formation-slot-5" class="formation-select">
+                  <option value="">キャラ名</option>
+                </select>
+              </div>
+            </div>
+
+
+                </div>
+          </div>
+        </div>
+
+      </div><!-- /.rta-v2-top-left -->
+
+      <!-- 右上：技リスト or 分身DMG＋形態X -->
+      <div id="rta-v2-top-right">
+        <!-- HP>0：技チェックリスト -->
+        <div class="rta-v2-inner-block block-techlist">
+          <table class="tlist-table">
+                <thead>
+                  <tr>
+                    <th class="col-tech">技名</th>
+                    <th class="col-gokui">極</th>
+                    <th class="col-main">閃</th>
+                  </tr>
+                </thead>
+                <tbody>
+
+                  <!-- 1〜12行目：固定技リスト -->
+
+                  <tr>
+                    <td class="tech-name-cell">
+                      <span class="tech-name-text">なぎ払い</span>
+                    </td>
+                    <td class="tech-check-cell">
+                      <input type="checkbox" class="chk-gokui" id="gokui-1" aria-label="なぎ払いの極意化済チェック">
+                    </td>
+                    <td class="tech-check-cell">
+                      <input type="checkbox" class="chk-main" id="main-1" aria-label="なぎ払いを主が閃いたチェック">
+                    </td>
+                  </tr>
+
+                  <tr>
+                    <td class="tech-name-cell">
+                      <span class="tech-name-text">かすみ二段</span>
+                    </td>
+                    <td class="tech-check-cell">
+                      <input type="checkbox" class="chk-gokui" id="gokui-2" aria-label="かすみ二段の極意化済チェック">
+                    </td>
+                    <td class="tech-check-cell">
+                      <input type="checkbox" class="chk-main" id="main-2" aria-label="かすみ二段を主が閃いたチェック">
+                    </td>
+                  </tr>
+
+                  <tr>
+                    <td class="tech-name-cell">
+                      <span class="tech-name-text">失礼剣</span>
+                    </td>
+                    <td class="tech-check-cell">
+                      <input type="checkbox" class="chk-gokui" id="gokui-3" aria-label="失礼剣の極意化済チェック">
+                    </td>
+                    <td class="tech-check-cell">
+                      <input type="checkbox" class="chk-main" id="main-3" aria-label="失礼剣を主が閃いたチェック">
+                    </td>
+                  </tr>
+
+                  <tr>
+                    <td class="tech-name-cell">
+                      <span class="tech-name-text">十文字切り</span>
+                    </td>
+                    <td class="tech-check-cell">
+                      <input type="checkbox" class="chk-gokui" id="gokui-4" aria-label="十文字切りの極意化済チェック">
+                    </td>
+                    <td class="tech-check-cell">
+                      <input type="checkbox" class="chk-main" id="main-4" aria-label="十文字切りを主が閃いたチェック">
+                    </td>
+                  </tr>
+
+                  <tr>
+                    <td class="tech-name-cell">
+                      <span class="tech-name-text">飛水断ち</span>
+                    </td>
+                    <td class="tech-check-cell">
+                      <input type="checkbox" class="chk-gokui" id="gokui-5" aria-label="飛水断ちの極意化済チェック">
+                    </td>
+                    <td class="tech-check-cell">
+                      <input type="checkbox" class="chk-main" id="main-5" aria-label="飛水断ちを主が閃いたチェック">
+                    </td>
+                  </tr>
+
+                  <tr>
+                    <td class="tech-name-cell">
+                      <span class="tech-name-text">龍尾返し</span>
+                    </td>
+                    <td class="tech-check-cell">
+                      <input type="checkbox" class="chk-gokui" id="gokui-6" aria-label="龍尾返しの極意化済チェック">
+                    </td>
+                    <td class="tech-check-cell">
+                      <input type="checkbox" class="chk-main" id="main-6" aria-label="龍尾返しを主が閃いたチェック">
+                    </td>
+                  </tr>
+
+                  <tr>
+                    <td class="tech-name-cell">
+                      <span class="tech-name-text">疾風剣</span>
+                    </td>
+                    <td class="tech-check-cell">
+                      <input type="checkbox" class="chk-gokui" id="gokui-7" aria-label="疾風剣の極意化済チェック">
+                    </td>
+                    <td class="tech-check-cell">
+                      <input type="checkbox" class="chk-main" id="main-7" aria-label="疾風剣を主が閃いたチェック">
+                    </td>
+                  </tr>
+
+                  <tr>
+                    <td class="tech-name-cell">
+                      <span class="tech-name-text">バックスタップ</span>
+                    </td>
+                    <td class="tech-check-cell">
+                      <input type="checkbox" class="chk-gokui" id="gokui-8" aria-label="バックスタップの極意化済チェック">
+                    </td>
+                    <td class="tech-check-cell">
+                      <input type="checkbox" class="chk-main" id="main-8" aria-label="バックスタップを主が閃いたチェック">
+                    </td>
+                  </tr>
+
+                  <tr>
+                    <td class="tech-name-cell">
+                      <span class="tech-name-text">亜空間斬り</span>
+                    </td>
+                    <td class="tech-check-cell">
+                      <input type="checkbox" class="chk-gokui" id="gokui-9" aria-label="亜空間斬りの極意化済チェック">
+                    </td>
+                    <td class="tech-check-cell">
+                      <input type="checkbox" class="chk-main" id="main-9" aria-label="亜空間斬りを主が閃いたチェック">
+                    </td>
+                  </tr>
+
+                  <tr>
+                    <td class="tech-name-cell">
+                      <span class="tech-name-text">残像剣</span>
+                    </td>
+                    <td class="tech-check-cell">
+                      <input type="checkbox" class="chk-gokui" id="gokui-10" aria-label="残像剣の極意化済チェック">
+                    </td>
+                    <td class="tech-check-cell">
+                      <input type="checkbox" class="chk-main" id="main-10" aria-label="残像剣を主が閃いたチェック">
+                    </td>
+                  </tr>
+
+                  <tr>
+                    <td class="tech-name-cell">
+                      <span class="tech-name-text">五月雨斬り</span>
+                    </td>
+                    <td class="tech-check-cell">
+                      <input type="checkbox" class="chk-gokui" id="gokui-11" aria-label="五月雨斬りの極意化済チェック">
+                    </td>
+                    <td class="tech-check-cell">
+                      <input type="checkbox" class="chk-main" id="main-11" aria-label="五月雨斬りを主が閃いたチェック">
+                    </td>
+                  </tr>
+
+                  <tr>
+                    <td class="tech-name-cell">
+                      <span class="tech-name-text">分身剣</span>
+                    </td>
+                    <td class="tech-check-cell">
+                      <input type="checkbox" class="chk-gokui" id="gokui-12" aria-label="分身剣の極意化済チェック">
+                    </td>
+                    <td class="tech-check-cell">
+                      <input type="checkbox" class="chk-main" id="main-12" aria-label="分身剣を主が閃いたチェック">
+                    </td>
+                  </tr>
+
+                </tbody>
+              </table>
+        </div>
+
+        <!-- HP<=0：分身DMG＋形態X -->
+        <div class="rta-v2-inner-block block-bunshin-pat">
+          <!-- 貼り付け位置:ここから（bunshinpat-box 本体） --><div class="bunshinpat-box">
+
+      <!-- 上部：分身剣想定ダメージ一覧 -->
+      <div class="bunshin-dmg-area">
+
+        <!-- タイトル -->
+        <div class="bunshin-title">分身剣想定ダメージ</div>
+
+        <!-- ① -->
+        <div class="bunshin-entry" data-slot="1">
+          <div class="bunshin-row">
+            <div class="slot-label">①キャラ</div>
+            <div class="dmg-label">最大</div>
+            <div><input type="text" class="dmg-input" id="bun-dmg-max-1" value="0"></div>
+          </div>
+          <div class="bunshin-row">
+            <div class="slot-label">
+              剣レベ<span class="sword-lv" id="bun-sword-lv-1">0</span>
+            </div>
+            <div class="dmg-label">最小</div>
+            <div><input type="text" class="dmg-input" id="bun-dmg-min-1" value="0"></div>
+          </div>
+        </div>
+
+        <!-- ② -->
+        <div class="bunshin-entry" data-slot="2">
+          <div class="bunshin-row">
+            <div class="slot-label">②キャラ</div>
+            <div class="dmg-label">最大</div>
+            <div><input type="text" class="dmg-input" id="bun-dmg-max-2" value="0"></div>
+          </div>
+          <div class="bunshin-row">
+            <div class="slot-label">
+              剣レベ<span class="sword-lv" id="bun-sword-lv-2">0</span>
+            </div>
+            <div class="dmg-label">最小</div>
+            <div><input type="text" class="dmg-input" id="bun-dmg-min-2" value="0"></div>
+          </div>
+        </div>
+
+        <!-- ③ -->
+        <div class="bunshin-entry" data-slot="3">
+          <div class="bunshin-row">
+            <div class="slot-label">③キャラ</div>
+            <div class="dmg-label">最大</div>
+            <div><input type="text" class="dmg-input" id="bun-dmg-max-3" value="0"></div>
+          </div>
+          <div class="bunshin-row">
+            <div class="slot-label">
+              剣レベ<span class="sword-lv" id="bun-sword-lv-3">0</span>
+            </div>
+            <div class="dmg-label">最小</div>
+            <div><input type="text" class="dmg-input" id="bun-dmg-min-3" value="0"></div>
+          </div>
+        </div>
+
+        <!-- ④ -->
+        <div class="bunshin-entry" data-slot="4">
+          <div class="bunshin-row">
+            <div class="slot-label">④キャラ</div>
+            <div class="dmg-label">最大</div>
+            <div><input type="text" class="dmg-input" id="bun-dmg-max-4" value="0"></div>
+          </div>
+          <div class="bunshin-row">
+            <div class="slot-label">
+              剣レベ<span class="sword-lv" id="bun-sword-lv-4">0</span>
+            </div>
+            <div class="dmg-label">最小</div>
+            <div><input type="text" class="dmg-input" id="bun-dmg-min-4" value="0"></div>
+          </div>
+        </div>
+
+        <!-- ⑤ -->
+        <div class="bunshin-entry" data-slot="5">
+          <div class="bunshin-row">
+            <div class="slot-label">⑤キャラ</div>
+            <div class="dmg-label">最大</div>
+            <div><input type="text" class="dmg-input" id="bun-dmg-max-5" value="0"></div>
+          </div>
+          <div class="bunshin-row">
+            <div class="slot-label">
+              剣レベ<span class="sword-lv" id="bun-sword-lv-5">0</span>
+            </div>
+            <div class="dmg-label">最小</div>
+            <div><input type="text" class="dmg-input" id="bun-dmg-min-5" value="0"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 下部：PATTERN X 表示 -->
+      <!-- 破壊するものの形態選択エリア
+           ・中央の四角が左右より大きい構成
+           ・形態10種（強／①〜④／弱／風／火／土／水）をループしながら選択
+           ・破壊ツール側の自動パターン推察とは接続しない -->
+      <div class="patternx-area">
+
+        <!-- 見出し -->
+        <div class="patternx-title">破壊するものの形態</div>
+
+        <!-- 形態選択の表示行
+             [左表示] [左ボタン] [中央表示] [右ボタン] [右表示] の5要素構造 -->
+        <div class="patternx-row patternx-selector">
+          <!-- 左：現在形態の1つ前を表示する小さめのボックス -->
+          <div class="patternx-box patternx-box-sub">
+            <span class="patternx-label patternx-label-sub" id="pattern-x-prev-label">－</span>
+          </div>
+
+          <!-- 左ボタン：1つ左の形態へ移動 -->
+          <button type="button" class="patternx-arrow" id="pattern-x-prev-button">◀</button>
+
+          <!-- 中央：現在選択中の形態を表示する大きいボックス -->
+          <div class="patternx-box patternx-box-main">
+            <span class="patternx-label patternx-label-main" id="pattern-x-current-label">未</span>
+          </div>
+
+          <!-- 右ボタン：1つ右の形態へ移動 -->
+          <button type="button" class="patternx-arrow" id="pattern-x-next-button">▶</button>
+
+          <!-- 右：現在形態の1つ後を表示する小さめのボックス -->
+          <div class="patternx-box patternx-box-sub">
+            <span class="patternx-label patternx-label-sub" id="pattern-x-next-label">－</span>
+          </div>
+        </div>
+
+	<div class="patternx-row patternx-hp-row">
+ 	 <span class="patternx-hp-label">獣魔形態HP</span>
+ 	 <span class="patternx-hp-value" id="pattern-x-hp-value">-</span>
+	</div>
+
+        <!-- 形態定義リスト（内部用）
+             ・このリストの順番が currentIndex(0〜9) の順番と一致する
+             ・data-symbol に画面表示用の1文字ラベル（強・①〜④・弱・風・火・土・水）
+             ・data-name に元の名称（闇（強）など）を保持する -->
+        <ul class="patternx-def-list" id="pattern-x-def-list">
+          <li data-index="0" data-symbol="闇強" data-name="闇（強）">闇（強）</li>
+          <li data-index="1" data-symbol="①" data-name="形態1">形態1</li>
+          <li data-index="2" data-symbol="②" data-name="形態2">形態2</li>
+          <li data-index="3" data-symbol="③" data-name="形態3">形態3</li>
+          <li data-index="4" data-symbol="④" data-name="形態4">形態4</li>
+          <li data-index="5" data-symbol="闇弱" data-name="闇（弱）">闇（弱）</li>
+          <li data-index="6" data-symbol="蒼龍" data-name="獣魔・蒼龍">獣魔・蒼龍</li>
+          <li data-index="7" data-symbol="朱鳥" data-name="獣魔・朱鳥">獣魔・朱鳥</li>
+          <li data-index="8" data-symbol="白虎" data-name="獣魔・白虎">獣魔・白虎</li>
+          <li data-index="9" data-symbol="玄武" data-name="獣魔・玄武">獣魔・玄武</li>
+        </ul>
+
+        <!-- 開発メモ：
+             ・currentIndex は 0〜9 の整数で、このリストの data-index と対応させる。
+               0: 闇（強）、1: 形態1、…、9: 獣魔・玄武
+             ・ラベルの更新ルール（JavaScript側）：
+               - 中央: currentIndex の data-symbol を pattern-x-current-label に表示（色は黒）
+               - 左  : (currentIndex - 1 + 10) % 10 の data-symbol を pattern-x-prev-label に表示（色は灰色）
+               - 右  : (currentIndex + 1) % 10 の data-symbol を pattern-x-next-label に表示（色は灰色）
+             ・色分けは CSS 側で
+               - .patternx-label-main を黒
+               - .patternx-label-sub を灰色
+               として指定している。 -->
+      </div>
+
+    </div>
+          <!-- 貼り付け位置:ここまで -->
+        </div>
+      </div>
+
+    </div><!-- /.rta-v2-top-row -->
+
+    <!-- 下段：フォル＆ビュネHP or 破壊ツール下段 -->
+    <div id="rta-v2-bottom">
+
+      <!-- HP>0：フォル＆ビュネHP -->
+      <div class="rta-v2-inner-block block-fb-hp">
+        <div id="boss-fb-area">
+              <div class="boss-wrapper">
+
+                <!-- フォル -->
+                <div class="boss-box" id="boss-forneus">
+                  <div class="boss-title">
+                    フォル
+                    <span class="otomo-label">
+                      お供レベル：<span id="forneus-otomo-level-display">0</span>
+                    </span>
+                  </div>
+
+		  <div class="boss-row-text">
+  		    最大HP:
+ 		    <span class="boss-hp-static" id="forneus-max-hp">28000</span>
+		    <!-- 見えないダミーボタン（56×23のスペース確保用） -->
+ 		    <button
+   		      type="button"
+	   	      class="boss-btn boss-btn-space"
+ 		      aria-hidden="true"
+  		      tabindex="-1"></button>
+		    <button type="button" class="boss-btn" id="forneus-return">リターン</button>
+		  </div>
+
+
+                  <div class="boss-row-text">
+                    <label>ダメージ入力：
+                      <input type="text"
+                             id="forneus-damage"
+                             class="boss-dmg-input"
+                             inputmode="numeric"
+                             pattern="[0-9]*"
+                             value="">
+                    </label>
+                  </div>
+
+                  <div class="boss-remaining">
+                    残りHP:
+                    <span id="forneus-remaining" class="boss-remaining-value">28000</span>
+                    <span class="boss-last-damage-label">直前<br>ダメージ:</span>
+                    <span id="forneus-last-damage" class="boss-last-damage-value">0000</span>
+                  </div>
+                </div>
+
+                <!-- ビュネ -->
+                <div class="boss-box" id="boss-byunei">
+                  <div class="boss-title">
+                    ビュネ
+                    <span class="otomo-label">
+                      お供レベル：<span id="byunei-otomo-level-display">0</span>
+                    </span>
+                  </div>
+		<div class="boss-row-text">
+		  最大HP:
+		  <span class="boss-hp-static" id="byunei-max-hp">9000</span>
+		  <!-- 見えないダミーボタン（56×23のスペース確保用） -->
+		  <button
+		    type="button"
+		    class="boss-btn boss-btn-space"
+		    aria-hidden="true"
+		    tabindex="-1"></button>
+		  <button type="button" class="boss-btn" id="byunei-return">リターン</button>
+		</div>
+
+
+                  <div class="boss-row-text">
+                    <label>ダメージ入力：
+                      <input type="text"
+                             id="byunei-damage"
+                             class="boss-dmg-input"
+                             inputmode="numeric"
+                             pattern="[0-9]*"
+                             value="">
+                    </label>
+                  </div>
+
+                  <div class="boss-remaining">
+                    残りHP:
+                    <span id="byunei-remaining" class="boss-remaining-value">9000</span>
+                    <span class="boss-last-damage-label">直前<br>ダメージ:</span>
+                    <span id="byunei-last-damage" class="boss-last-damage-value">0000</span>
+                  </div>
+                </div>
+
+              </div><!-- /.boss-wrapper -->
+            </div><!-- /#boss-fb-area -->
+      </div>
+
+      <!-- HP<=0：破壊ツール下段 -->
+      <div class="rta-v2-inner-block block-hakai-bottom">
+        <div class="hakai-bottom-box">
+
+              <!-- 左：分身剣ダメージ入力 -->
+              <div class="hakai-dmg-area">
+
+                <!-- 見出し＋上部ボタン（獣魔撃破／リターン） -->
+                <div class="hakai-dmg-header">
+                  <div class="hakai-dmg-title">分身剣ダメージ入力</div>
+                  <div class="hakai-dmg-header-buttons">
+                    <button id="beast-btn" type="button" class="hakai-header-btn">
+                      獣魔撃破
+                    </button>
+                    <button id="return-btn" type="button" class="hakai-header-btn">
+                      リターン
+                    </button>
+                  </div>
+                </div>
+
+                <!-- ダメージ入力 ①〜⑤ ＋ ターン数 -->
+                <div class="dmg-grid">
+                  <!-- 1段目：①②③ -->
+                  <div class="dmg-slot current" data-slot="0">
+                    <span class="slot-label">①</span>
+                    <input id="dmg-1" class="dmg-input" inputmode="numeric" pattern="[0-9]*">
+                  </div>
+                  <div class="dmg-slot" data-slot="1">
+                    <span class="slot-label">②</span>
+                    <input id="dmg-2" class="dmg-input" inputmode="numeric" pattern="[0-9]*">
+                  </div>
+                  <div class="dmg-slot" data-slot="2">
+                    <span class="slot-label">③</span>
+                    <input id="dmg-3" class="dmg-input" inputmode="numeric" pattern="[0-9]*">
+                  </div>
+
+                  <!-- 2段目：ターン数／④／⑤ -->
+                  <div class="turn-cell">
+                    <div class="turn-count-value" id="turn-count">0ターン</div>
+                  </div>
+                  <div class="dmg-slot" data-slot="3">
+                    <span class="slot-label">④</span>
+                    <input id="dmg-4" class="dmg-input" inputmode="numeric" pattern="[0-9]*">
+                  </div>
+                  <div class="dmg-slot" data-slot="4">
+                    <span class="slot-label">⑤</span>
+                    <input id="dmg-5" class="dmg-input" inputmode="numeric" pattern="[0-9]*">
+                  </div>
+                </div>
+
+                <!-- 下段：残りHP＋ターン終了＋リセット -->
+                <div class="hakai-bottom-row">
+                  <div class="hakai-bottom-left">
+                    <div class="hp-panel">
+                      <div class="hp-caption">残りHP</div>
+                      <div class="hp-value" id="hakai-hp">7500</div>
+                    </div>
+
+                    <button id="endturn-btn" type="button" class="hakai-bottom-btn">
+                      ターン終了
+                    </button>
+                  </div>
+
+                  <button id="reset-btn" type="button" class="hakai-bottom-btn hakai-reset-right">
+                    リセット
+                  </button>
+                </div>
+
+
+              </div><!-- /.hakai-dmg-area -->
+
+              <!-- 右：パターン推察（①〜④のみ表示） -->
+              <div class="hakai-pattern-area">
+                <div class="hakai-pattern-title">パターン推察</div>
+
+                <table class="hakai-pattern-table">
+                  <tr>
+                    <th colspan="2" class="hakai-pattern-head">
+                      破壊するもの①～④
+                    </th>
+                  </tr>
+                  <tr>
+                    <td class="pat-label">①</td>
+                    <td class="pat-percent"><span id="pat-1">0.00</span>%</td>
+                  </tr>
+                  <tr>
+                    <td class="pat-label">②</td>
+                    <td class="pat-percent"><span id="pat-2">0.00</span>%</td>
+                  </tr>
+                  <tr>
+                    <td class="pat-label">③</td>
+                    <td class="pat-percent"><span id="pat-3">0.00</span>%</td>
+                  </tr>
+                  <tr>
+                    <td class="pat-label">④</td>
+                    <td class="pat-percent"><span id="pat-4">0.00</span>%</td>
+                  </tr>
+                </table>
+              </div><!-- /.hakai-pattern-area -->
+
+            </div><!-- /.hakai-bottom-box -->
+      </div>
+    </div>
+
+  </div><!-- /#rta-v2-root -->
+  <script src="rs3chrparam.js"></script>
+  <script src="rs3_rta_v2_char_param.js"></script>
+  <script src="bunshin_sword_99.js"></script>
+  <script src="rs3_box_bunshin_pat_v2.js"></script>
+  <script src="rs3_box_fb_v2.js"></script>
+  <script src="rs3_rta_v2_bunshin_link.js"></script>
+  <script src="rs3_box_spark_v2.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      // ------------------------------------------------------
+      // お供用リセットボタン：「起動直後の状態」に戻す
+      // ------------------------------------------------------
+      const resetBtn = document.querySelector(
+        "#rta-v2-top-lm > div > table > tbody > " +
+        "tr.rta-v2-char-row-otomo-header > " +
+        "td.support-reset-header > button"
+      );
+
+      if (resetBtn) {
+        resetBtn.addEventListener("click", function () {
+          // 「rs3_rta_v2_kidou.html」を開いた直後の状態に戻す
+          location.reload();
+        });
+      }
+
+      // ------------------------------------------------------
+      // お供レベル & フォル／ビュネHP連動
+      // ------------------------------------------------------
+      const supportCharSelect = document.getElementById("support-char");
+      const supportHpInput    = document.getElementById("support-hp");
+      const supportLvSpan     = document.getElementById("support-lv");
+      const forneusLvSpan     = document.getElementById("forneus-otomo-level-display");
+      const byuneiLvSpan      = document.getElementById("byunei-otomo-level-display");
+
+      // お供周りの要素が無ければ、ここから先は何もしない
+      if (!supportHpInput || !supportLvSpan) {
+        return;
+      }
+
+      // ハーマン／タチアナの「デフォルトHP」
+      const BASE_SUPPORT_HP = {
+        herman: 210,
+        tatiana: 65
+      };
+
+      function getCurrentSupportKey() {
+        if (!supportCharSelect) return "herman";
+        const v = supportCharSelect.value;
+        if (v === "tatiana") return "tatiana";
+        return "herman"; // デフォルトはハーマン扱い
+      }
+
+      function getBaseSupportHp() {
+        const key = getCurrentSupportKey();
+        return BASE_SUPPORT_HP[key] || 0;
+      }
+
+      // 差分 / 15 を使って お供LV を算出
+      function calcOtomoLevel(currentHp, baseHp) {
+        const diff = currentHp - baseHp;
+        if (!Number.isFinite(diff) || diff <= 0) return 0;
+        return Math.max(0, Math.floor(diff / 15));
+      }
+
+      // お供HP → お供LV → フォル／ビュネHP を反映
+      function applyOtomoLevel() {
+        const baseHp = getBaseSupportHp();
+        if (baseHp <= 0) {
+          // 基礎値がおかしい場合は全部 0 扱い
+          supportLvSpan.textContent = "0";
+          if (forneusLvSpan) forneusLvSpan.textContent = "0";
+          if (byuneiLvSpan)  byuneiLvSpan.textContent  = "0";
+          return;
+        }
+
+        let currentHp = Number(supportHpInput.value);
+        if (!Number.isFinite(currentHp) || currentHp <= 0) {
+          currentHp = baseHp;
+        }
+
+        // 「デフォルト値より小さくならない」制約
+        if (currentHp < baseHp) {
+          currentHp = baseHp;
+          supportHpInput.value = String(baseHp);
+        }
+
+        const otomoLv = calcOtomoLevel(currentHp, baseHp);
+
+        // 上部「お供LV」
+        supportLvSpan.textContent = String(otomoLv);
+
+        // 下部フォル／ビュネ側の「お供LV 表示」
+        if (forneusLvSpan) forneusLvSpan.textContent = String(otomoLv);
+        if (byuneiLvSpan)  byuneiLvSpan.textContent  = String(otomoLv);
+
+        // フォル／ビュネの最大HP更新
+        if (window.rs3_box_fb_v2) {
+          const forneusBase = 28000;
+          const byuneiBase  = 9000;
+
+          // 基礎HP + (基礎HP / 32) * お供LV を小数点以下切り捨て
+          const forneusHp = Math.floor(forneusBase + (forneusBase / 32) * otomoLv);
+          const byuneiHp  = Math.floor(byuneiBase  + (byuneiBase  / 32) * otomoLv);
+
+          if (typeof window.rs3_box_fb_v2.setForneusMaxHP === "function") {
+            window.rs3_box_fb_v2.setForneusMaxHP(forneusHp);
+          }
+          if (typeof window.rs3_box_fb_v2.setByuneiMaxHP === "function") {
+            window.rs3_box_fb_v2.setByuneiMaxHP(byuneiHp);
+          }
+        }
+      }
+
+      // お供HPのスピン＆直接入力で反映
+      supportHpInput.addEventListener("input",  applyOtomoLevel);
+      supportHpInput.addEventListener("change", applyOtomoLevel);
+
+      // お供キャラ（ハーマン／タチアナ）変更時も再計算
+      if (supportCharSelect) {
+        supportCharSelect.addEventListener("change", function () {
+          // rs3_rta_v2_char_param.js 側で基礎HPを書き換えた後に反映したいので、少し後ろにずらす
+          setTimeout(applyOtomoLevel, 0);
+        });
+      }
+
+      // 起動直後の表示を同期
+      applyOtomoLevel();
+    });
+  </script>
+
+</body>
+</html>

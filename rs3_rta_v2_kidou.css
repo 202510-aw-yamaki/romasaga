@@ -1,0 +1,157 @@
+/* rs3_rta_v2_kidou.css
+   RTA本体レイアウト用（468×468 / 3スロット＋左分割）
+*/
+
+/* リセット */
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont,
+               "Yu Gothic", "メイリオ", sans-serif;
+  font-size: 12px;
+}
+
+/* 画面全体ルート 468×468 */
+#rta-v2-root {
+  width: 468px;
+  height: 468px;
+  box-sizing: border-box;
+  border: 1px solid #444;
+  display: flex;
+  flex-direction: column;
+  background-color: #ffffff;
+}
+
+/* 上段+下段の構成
+   上段：高さ 360px（左300/右168）
+   下段：高さ 108px（幅468）
+*/
+.rta-v2-top-row {
+  width: 100%;
+  height: 360px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: row;
+}
+
+/* 左上 300px 幅（メイン＋サブ縦分割） */
+.rta-v2-top-left {
+  width: 300px;
+  height: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 右上 168×360 */
+#rta-v2-top-right {
+  width: 168px;
+  height: 360px;
+  box-sizing: border-box;
+  border-left: 1px solid #444;
+}
+
+/* 左上メイン 300×255 */
+#rta-v2-top-lm {
+  width: 300px;
+  height: 255px;
+  box-sizing: border-box;
+}
+
+/* 左上サブ 300×105 */
+#rta-v2-top-ls {
+  width: 300px;
+  height: 105px;
+  box-sizing: border-box;
+}
+
+/* 下段 468×108 */
+#rta-v2-bottom {
+  width: 468px;
+  height: 108px;
+  box-sizing: border-box;
+}
+
+/* デバッグ表示用の枠とラベル（後で不要になれば削除可） */
+.rta-v2-slot-box {
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  border: 1px solid #888;
+  padding: 2px;
+  position: relative;
+}
+
+.rta-v2-slot-label {
+  font-size: 11px;
+  font-weight: bold;
+  padding: 0 2px;
+  background-color: #f0f0ff;
+  display: inline-block;
+  margin-bottom: 2px;
+}
+
+/* スロット内のダミーコンテンツ */
+.rta-v2-slot-dummy {
+  font-size: 11px;
+  color: #555;
+}
+
+/* --- HP状態による表示切替 -------------------------
+   layout-hp-normal : HP>0（通常モード）
+   layout-hp-zero   : HP<=0（HP0モード） */
+
+/* 共通：中身コンテナは基本非表示にしておき、状態ごとにONにする */
+.rta-v2-inner-block {
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  display: none;
+}
+
+/* --- HP>0 のときの表示 ------------------------ */
+
+/* 左上メインは常に「キャラ＋お供レベル」 */
+.layout-hp-normal #rta-v2-top-lm .block-char-otomo {
+  display: block;
+}
+
+/* 左上サブ：SPARK BLOCK（分身剣閃き） */
+.layout-hp-normal #rta-v2-top-ls .block-spark {
+  display: block;
+}
+
+/* 右上：TECH LIST */
+.layout-hp-normal #rta-v2-top-right .block-techlist {
+  display: block;
+}
+
+/* 下段：フォル＆ビュネHP */
+.layout-hp-normal #rta-v2-bottom .block-fb-hp {
+  display: block;
+}
+
+/* --- HP<=0 のときの表示 ----------------------- */
+
+.layout-hp-zero #rta-v2-top-lm .block-char-otomo {
+  display: block;
+}
+
+/* 左上サブ：FORMATION BLOCK（陣形スロット） */
+.layout-hp-zero #rta-v2-top-ls .block-formation {
+  display: block;
+}
+
+/* 右上：分身ダメージ＋形態X */
+.layout-hp-zero #rta-v2-top-right .block-bunshin-pat {
+  display: block;
+}
+
+/* 下段：破壊ツール下段（分身ダメージ入力＋パターン推察） */
+.layout-hp-zero #rta-v2-bottom .block-hakai-bottom {
+  display: block;
+}

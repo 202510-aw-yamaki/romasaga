@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>分身剣閃きブロック（SPARK BLOCK）</title>
+  <link rel="stylesheet" href="rs3_box_spark_v2.css">
+</head>
+<body>
+
+  <!-- 開発メモ：
+    ・箱サイズは 300×105 固定（TOP LEFT SUB 用）
+    ・上部タイトル行：高さ 約25px
+    ・本体部：フォル／ビュネの閃き回数入力＋確率表示
+    ・閃き回数は 0～8 回想定
+  -->
+
+  <!-- 左上サブスロット用コンテナ（300×105） -->
+  <div id="rta-v2-top-ls">
+
+    <table class="spark-outer">
+      <thead>
+        <tr>
+          <th colspan="3" class="spark-title">
+            分身剣閃き確率
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <!-- 本体は colspan=3 の中に内部テーブルを持つ -->
+          <td colspan="3" class="spark-container-cell">
+            <table class="spark-inner">
+              <tbody>
+                <!-- 対フォル：2行（王冠 有／王冠 無） -->
+                <tr>
+                  <td class="spark-label" rowspan="2">対フォル</td>
+                  <td class="spark-row" rowspan="2">
+                    閃き回数
+                    <span class="spin-box">
+                      <input
+                        type="number"
+                        class="num-input spark-count-input"
+                        id="spark-count-forneus"
+                        min="0"
+                        max="8"
+                        value="0"
+                        step="1"
+                        aria-label="対フォルの閃き回数">
+                      <div class="spin-buttons">
+                        <button type="button" class="spin-btn spin-up">▲</button>
+                        <button type="button" class="spin-btn spin-down">▼</button>
+                      </div>
+                    </span>
+                  </td>
+                  <td class="spark-row">
+                    <span class="spark-crown-label">王冠 有</span>
+                    <span class="spark-rate" id="spark-rate-forneus-crown">0.00%</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="spark-row">
+                    <span class="spark-crown-label">王冠 無</span>
+                    <span class="spark-rate" id="spark-rate-forneus-nocrown">0.00%</span>
+                  </td>
+                </tr>
+
+                <!-- 対ビュネ：1行（王冠 無 のみ） -->
+                <tr>
+                  <td class="spark-label">対ビュネ</td>
+                  <td class="spark-row">
+                    閃き回数
+                    <span class="spin-box">
+                      <input
+                        type="number"
+                        class="num-input spark-count-input"
+                        id="spark-count-byunei"
+                        min="0"
+                        max="8"
+                        value="0"
+                        step="1"
+                        aria-label="対ビュネの閃き回数">
+                      <div class="spin-buttons">
+                        <button type="button" class="spin-btn spin-up">▲</button>
+                        <button type="button" class="spin-btn spin-down">▼</button>
+                      </div>
+                    </span>
+                  </td>
+                  <td class="spark-row">
+                    <span class="spark-crown-label">王冠 無</span>
+                    <span class="spark-rate" id="spark-rate-byunei-nocrown">0.00%</span>
+                  </td>
+                </tr>
+
+              </tbody>
+            </table>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+  </div>
+
+  <!-- spark用のJSを読み込む -->
+  <script src="rs3_box_spark_v2.js"></script>
+</body>
+</html>

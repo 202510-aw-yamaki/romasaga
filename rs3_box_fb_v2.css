@@ -1,0 +1,146 @@
+/* フォル＆ビュネ HP ブロック用 CSS 468×108 */
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont,
+               "Yu Gothic", "メイリオ", sans-serif;
+  font-size: 12px;
+}
+
+/* 下段スロット用コンテナ */
+#rta-v2-bottom {
+  width: 468px;
+  height: 108px;
+  box-sizing: border-box;
+  padding: 0;
+  display: flex;
+  align-items: stretch;
+  justify-content: stretch;
+}
+
+/* 全体（ボスHPエリア） */
+#boss-fb-area {
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+/* フォル＆ビュネを左右に並べる */
+.boss-wrapper {
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: row;
+  gap: 8px;                 /* 230 + 8 + 230 = 468 */
+}
+
+/* 個別ボックス：230×108 想定 */
+.boss-box {
+  width: 230px;
+  height: 100%;
+  box-sizing: border-box;
+  border: 1px solid #444;
+  padding: 2px 4px;
+  font-size: 12px;
+  background-color: #ffffff;
+  display: flex;
+  flex-direction: column;
+}
+
+/* タイトル行（フォル／ビュネ＋お供レベル） */
+.boss-title {
+  font-weight: bold;
+  margin: 0 0 2px 0;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.otomo-label {
+  font-size: 11px;
+  margin-left: 4px;
+}
+
+/* 行テキスト共通 */
+.boss-row-text {
+  font-size: 11px;
+  margin: 0 0 2px 0;
+  padding: 0;
+  display: flex;
+  align-items: center;
+}
+
+/* 最大HP 表示 */
+.boss-hp-static {
+  font-family: Consolas, "Courier New", monospace;
+  margin-left: 2px;
+  min-width: 50px;
+  text-align: right;
+}
+
+/* ボタン */
+.boss-btn {
+  font-size: 11px;
+  padding: 1px 4px;
+  margin-left: 4px;
+}
+
+/* 位置調整用のダミーボタン（見えないが 56×23 のスペースだけ確保） */
+.boss-btn-space {
+  visibility: hidden;      /* 見えないがレイアウト上は存在する */
+  display: inline-block;
+  box-sizing: border-box;
+  width: 56px;
+  height: 23px;
+  padding: 0;
+  border: none;
+}
+
+/* ダメージ入力欄 */
+.boss-dmg-input {
+  width: 90px;
+  box-sizing: border-box;
+  font-family: Consolas, "Courier New", monospace;
+  font-size: 11px;
+  text-align: right;
+  padding: 1px 2px;
+  margin-left: 2px;
+}
+
+/* 残りHP＋直前ダメージ行 */
+.boss-remaining {
+  font-size: 14px;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  align-items: center;
+}
+
+.boss-remaining-value {
+  font-family: Consolas, "Courier New", monospace;
+  font-weight: bold;
+  min-width: 60px;
+  text-align: right;
+  margin-left: 2px;
+}
+
+/* 「直前ダメージ」ラベル＆値 */
+.boss-last-damage-label {
+  font-size: 10px;
+  text-align: center;
+  margin-left: 4px;
+}
+
+.boss-last-damage-value {
+  font-family: Consolas, "Courier New", monospace;
+  min-width: 40px;
+  text-align: right;
+  margin-left: 2px;
+}

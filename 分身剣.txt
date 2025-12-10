@@ -1,0 +1,2 @@
+名前	TY00	TY01	TY02	TY03	TY04	TY05	TY06	TY07	TY08	TY09	TY10	TY11	TY12	TY13	TY14	TY15
+分身剣	×	○	○	×	×	○	×	×	×	○	○	○	○	○	○	○

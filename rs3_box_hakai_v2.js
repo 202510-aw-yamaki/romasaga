@@ -1,0 +1,664 @@
+// rs3_box_hakai_v2.js
+// #rta-v2-bottom の中に、破壊ボックス一式（左ダメージ＋右形態）を丸ごと生成するスクリプト。
+// ・HTML構造生成
+// ・HP減算／ターン管理
+// ・破壊形態①〜④の推察ロジック
+// ・獣魔撃破／リターン／闇移行／リセット
+// までをこのファイル内で完結させる。 :contentReference[oaicite:0]{index=0}
+
+(function () {
+  'use strict';
+
+  // =========================================================
+  // 1. HTML生成
+  // =========================================================
+
+  function buildHakaiBoxHtml() {
+    // いままで rs3_box_hakai_v2.html の <div id="rta-v2-bottom"> の中に書いていた内容を
+    // そのままテンプレートにしたものです。
+    return `
+    <div class="hakai-bottom-box">
+
+      <!-- 左：分身剣ダメージ入力 -->
+      <div class="hakai-dmg-area">
+
+        <!-- 見出し＋上部ボタン（獣魔撃破／リターン／闇移行） -->
+        <div class="hakai-dmg-header">
+          <div class="hakai-dmg-title">分身剣ダメージ入力</div>
+          <div class="hakai-dmg-header-buttons">
+            <button id="beast-btn" type="button" class="hakai-header-btn">
+              獣魔撃破
+            </button>
+            <button id="return-btn" type="button" class="hakai-header-btn">
+              リターン
+            </button>
+            <button id="dark-btn" type="button" class="hakai-header-btn">
+              闇移行
+            </button>
+          </div>
+        </div>
+
+        <!-- ダメージ入力 ①〜⑤ ＋ ターン数 -->
+        <div class="dmg-grid">
+          <!-- 1段目：①②③ -->
+          <div class="dmg-slot current" data-slot="0">
+            <span class="slot-label">①</span>
+            <input id="dmg-1" class="dmg-input" inputmode="numeric" pattern="[0-9\-]*">
+          </div>
+          <div class="dmg-slot" data-slot="1">
+            <span class="slot-label">②</span>
+            <input id="dmg-2" class="dmg-input" inputmode="numeric" pattern="[0-9\-]*">
+          </div>
+          <div class="dmg-slot" data-slot="2">
+            <span class="slot-label">③</span>
+            <input id="dmg-3" class="dmg-input" inputmode="numeric" pattern="[0-9\-]*">
+          </div>
+
+          <!-- 2段目：ターン数／④／⑤ -->
+          <div class="turn-cell">
+            <div class="turn-count-value" id="turn-count">0ターン</div>
+          </div>
+          <div class="dmg-slot" data-slot="3">
+            <span class="slot-label">④</span>
+            <input id="dmg-4" class="dmg-input" inputmode="numeric" pattern="[0-9\-]*">
+          </div>
+          <div class="dmg-slot" data-slot="4">
+            <span class="slot-label">⑤</span>
+            <input id="dmg-5" class="dmg-input" inputmode="numeric" pattern="[0-9\-]*">
+          </div>
+        </div>
+
+        <!-- 下段：残りHP＋ターン終了＋リセット -->
+        <div class="hakai-bottom-row">
+          <div class="hakai-bottom-left">
+            <div class="hp-panel">
+              <div class="hp-caption">残りHP</div>
+              <div class="hp-value" id="hakai-hp">7500</div>
+            </div>
+
+            <button id="endturn-btn" type="button" class="hakai-bottom-btn">
+              ターン終了
+            </button>
+          </div>
+
+          <button id="reset-btn" type="button" class="hakai-bottom-btn hakai-reset-right">
+            リセット
+          </button>
+        </div>
+
+      </div><!-- /.hakai-dmg-area -->
+
+      <!-- 右：現在形態＋8ターン履歴 -->
+      <div class="hakai-pattern-area">
+
+        <!-- 上段：推察された現在形態（初期値は①） -->
+        <div class="pattern-current-box">
+          <span class="pattern-current-label">現在形態</span>
+          <span class="pattern-current-value" id="pattern-current-shape">①</span>
+        </div>
+
+        <!-- 下段：8ターン分の履歴（4行×4列） -->
+        <table class="pattern-history-table">
+          <tbody>
+            <tr>
+              <td class="hist-turn-label">1T</td>
+              <td class="hist-form-cell" id="hist-form-1">①</td>
+              <td class="hist-turn-label">5T</td>
+              <td class="hist-form-cell" id="hist-form-5">？</td>
+            </tr>
+            <tr>
+              <td class="hist-turn-label">2T</td>
+              <td class="hist-form-cell" id="hist-form-2">？</td>
+              <td class="hist-turn-label">6T</td>
+              <td class="hist-form-cell" id="hist-form-6">？</td>
+            </tr>
+            <tr>
+              <td class="hist-turn-label">3T</td>
+              <td class="hist-form-cell" id="hist-form-3">？</td>
+              <td class="hist-turn-label">7T</td>
+              <td class="hist-form-cell" id="hist-form-7">？</td>
+            </tr>
+            <tr>
+              <td class="hist-turn-label">4T</td>
+              <td class="hist-form-cell" id="hist-form-4">？</td>
+              <td class="hist-turn-label">8T</td>
+              <td class="hist-form-cell" id="hist-form-8">？</td>
+            </tr>
+          </tbody>
+        </table>
+
+      </div><!-- /.hakai-pattern-area -->
+
+    </div><!-- /.hakai-bottom-box -->
+    `;
+  }
+
+  // =========================================================
+  // 2. 敵パラメータ（分身Patと同じ値をここにも持つ）
+  // =========================================================
+
+  // PATTERN_LIST から破壊形態①〜④に対応する vit / slash(def) を参照する。
+  // ※必要最低限：index 1〜4 のみを持つ。
+  const HAKAI_PATTERNS = [
+    { index: 1, symbol: "①", vit: 45, def: 45 },
+    { index: 2, symbol: "②", vit: 46, def: 33 },
+    { index: 3, symbol: "③", vit: 40, def: 28 },
+    { index: 4, symbol: "④", vit: 40, def: 23 }
+  ];
+
+  function getEnemyParamsForSymbol(symbol) {
+    const pat = HAKAI_PATTERNS.find(p => p.symbol === symbol);
+    if (!pat) {
+      // 念のためフォールバック：①
+      return { vit: 45, def: 45 };
+    }
+    return { vit: pat.vit, def: pat.def };
+  }
+
+  // =========================================================
+  // 3. 破壊ボックス内部状態
+  // =========================================================
+
+  const hakaiState = {
+    hp: 7500,          // 現在の本体HP（ゲーム内と同じ7500。減算は/10）
+    turn: 1,           // 経過ターン数
+    lastEdit: null,    // 直近に編集したスロット番号(1〜5)
+    lastHp: null,      // リターン用：編集前のHP
+    editHistory: [],   // 同一ターン内のダメージ入力履歴（リターン用スタック）
+    history: ["①","？","？","？","？","？","？","？"], // 1T〜8Tの形態履歴
+    currentForm: "①", // 現在形態（初期値①）
+    darkMode: false,   // 闇突入フラグ
+    patternTable: null // 形態①〜④ × スロット1〜5 の {min, max} テーブル
+  };
+
+
+  function el(id) {
+    return document.getElementById(id);
+  }
+
+  // =========================================================
+  // 4. 剣レベル取得の差し込みポイント
+  // =========================================================
+
+  /**
+   * フォーメーションのスロット（1〜5）にいるキャラの「分身剣レベル」を返す。
+   * ※ここはプロジェクトの実データ仕様に合わせて実装し直してください。
+   *   ひとまず安全側として 0 を返すダミーにしてあります。
+   */
+  function getSwordLevelForSlot(slotIndex) {
+    // TODO: kidou.html ＋ rs3_rta_v2_char_param.js の仕様に合わせて実装する。
+    // 例：
+    //   const input = document.querySelector(`.sword-input[data-form-slot="${slotIndex}"]`);
+    //   return input ? Number(input.value) || 0 : 0;
+    return 0;
+  }
+
+  // =========================================================
+  // 5. 形態①〜④ × スロット1〜5 の乱数幅テーブルを構築
+  // =========================================================
+
+  function rebuildPatternDamageTable() {
+    if (!window.bunshin_sword_99 || typeof window.bunshin_sword_99.calcDamage !== "function") {
+      // 分身剣計算ロジックが未読み込みの場合は何もしない
+      hakaiState.patternTable = null;
+      return;
+    }
+
+    const table = {}; // { "①": [ {min,max}, ...slot5 ], ... }
+
+    // 形態①〜④
+    HAKAI_PATTERNS.forEach(pat => {
+      const formSymbol = pat.symbol;
+      const enemy = getEnemyParamsForSymbol(formSymbol);
+      const slots = [];
+
+      for (let slot = 1; slot <= 5; slot++) {
+        const swordLv = getSwordLevelForSlot(slot);
+        const lv = Math.max(0, Math.min(50, Number(swordLv) || 0));
+
+        const params = {
+          lv: lv,
+          wea: 25,          // 武器攻撃力は25固定
+          def: enemy.def,   // 斬防
+          vit: enemy.vit,   // 体力
+          prev: 99          // 分身剣用デフォルト
+          // base / sei は calcDamage 側の分身剣デフォルトを使用
+        };
+
+        const res = window.bunshin_sword_99.calcDamage(params);
+        slots.push({
+          min: Number(res && res.min) || 0,
+          max: Number(res && res.max) || 0
+        });
+      }
+
+      table[formSymbol] = slots;
+    });
+
+    hakaiState.patternTable = table;
+  }
+
+  // =========================================================
+  // 6. 表示更新系
+  // =========================================================
+
+  function updateHpDisplay() {
+    const hpElem = el("hakai-hp");
+    if (hpElem) hpElem.textContent = String(hakaiState.hp);
+  }
+
+  function updateTurnDisplay() {
+    const tElem = el("turn-count");
+    if (tElem) tElem.textContent = `${hakaiState.turn}ターン`;
+  }
+
+  function updateFormDisplays() {
+    const cur = el("pattern-current-shape");
+    if (cur) cur.textContent = hakaiState.currentForm;
+
+    for (let i = 0; i < 8; i++) {
+      const cell = el(`hist-form-${i + 1}`);
+      if (cell) cell.textContent = hakaiState.history[i];
+    }
+  }
+
+  // =========================================================
+  // 7. 形態推察ロジック
+  // =========================================================
+
+  /**
+   * 現在ターン中に入力されているダメージ（非0）と patternTable を使って
+   * そのターンの形態（①〜④）を推察する。
+   * - 乱数幅の重複がない前提なので、一致する形態は高々1つ。
+   * - 一致なしの場合は、直前の currentForm を維持する。
+   */
+  function estimateFormFromInputs() {
+    const table = hakaiState.patternTable;
+    if (!table) {
+      // 乱数幅未計算なら現行形態を維持
+      return hakaiState.currentForm;
+    }
+
+    // スロット1〜5の非0ダメージを取得
+    const nonZeroSlots = [];
+    for (let slot = 1; slot <= 5; slot++) {
+      const input = el(`dmg-${slot}`);
+      if (!input) continue;
+      const raw = input.value.trim();
+      if (raw === "") continue;
+      const v = Number(raw);
+      if (!Number.isFinite(v)) continue;
+      if (v === 0) continue; // 0は推察に使わない
+      nonZeroSlots.push({ slot, value: v });
+    }
+
+    if (nonZeroSlots.length === 0) {
+      // 推察に使える値がない場合は現行形態のまま
+      return hakaiState.currentForm;
+    }
+
+    // 形態①〜④のどれが「すべての非0ダメージに対して min〜max を満たすか」をチェック
+    const candidateForms = [];
+
+    HAKAI_PATTERNS.forEach(pat => {
+      const formSymbol = pat.symbol;
+      const slots = table[formSymbol];
+      if (!slots || slots.length < 5) return;
+
+      let ok = true;
+      for (const nz of nonZeroSlots) {
+        const idx = nz.slot - 1; // 0-based
+        const range = slots[idx];
+        if (!range) {
+          ok = false;
+          break;
+        }
+        const dmg = nz.value;
+        if (dmg < range.min || dmg > range.max) {
+          ok = false;
+          break;
+        }
+      }
+
+      if (ok) candidateForms.push(formSymbol);
+    });
+
+    if (candidateForms.length === 1) {
+      return candidateForms[0];
+    }
+
+    // 0個 or 複数候補の場合は、いったん現行形態を維持
+    return hakaiState.currentForm;
+  }
+
+  /**
+   * ダメージ入力（非0）が入ったタイミングで現在形態を更新する。
+   * - ただし闇モード中は変化させない。
+   */
+  function updateCurrentFormFromInputs() {
+    if (hakaiState.darkMode) return;
+    const newForm = estimateFormFromInputs();
+    hakaiState.currentForm = newForm;
+    updateFormDisplays();
+  }
+
+  // =========================================================
+  // 8. HP・ターン・各種ボタン挙動
+  // =========================================================
+
+  function applyDamage(slotId) {
+    const input = el(`dmg-${slotId}`);
+    if (!input) return;
+
+    const raw = input.value.trim();
+    if (raw === "") return;
+
+    let v = Number(raw);
+    if (!Number.isFinite(v)) return;
+
+    // 「マイナス値入力で回復」は破壊ボックス仕様に合わせて実装する場合、
+    // ここで v<0 を許容し、そのまま /10 でHPに反映させる。
+    const dmgUnit = Math.floor(v / 10);
+    if (!Number.isFinite(dmgUnit) || dmgUnit === 0) {
+      // 0ダメージ（または 0超だが /10 で0になる低値）は HP 変動なし。
+      // HP変動がない入力は履歴に積まない。
+      hakaiState.lastEdit = slotId;
+      hakaiState.lastHp = hakaiState.hp;
+      return;
+    }
+
+    // リターン用履歴に1件追加（同一ターン内だけ保持）
+    if (!Array.isArray(hakaiState.editHistory)) {
+      hakaiState.editHistory = [];
+    }
+    hakaiState.editHistory.push({
+      slot: slotId,
+      prevHp: hakaiState.hp
+    });
+
+    // 互換用フィールドも更新
+    hakaiState.lastEdit = slotId;
+    hakaiState.lastHp = hakaiState.hp;
+
+    const nextHp = hakaiState.hp - dmgUnit;
+    hakaiState.hp = nextHp < 0 ? 0 : nextHp;
+
+    updateHpDisplay();
+  }
+
+
+  /**
+   * 1ターンを締めてターン数＋履歴を更新する。
+   * - 形態移行はターン単位。ターン中の形態変化はしない。
+   * - ただし「現在形態」はダメージ入力時点で前倒し表示されている。
+   */
+  /**
+   * 1ターンを締めてターン数＋履歴を更新する。
+   * - 右のスロットは「そのターンの最終形態」を記録する。
+   * - 1T目は常に①固定。2T目以降のみ推察結果を書き込む。
+   */
+  function endTurn() {
+    if (hakaiState.darkMode) {
+      // 闇モード中もターン数はカウント継続
+      // 「いまのターン」の行に闇を確定させる
+      if (hakaiState.turn >= 1 && hakaiState.turn <= 8) {
+        hakaiState.history[hakaiState.turn - 1] = "闇";
+      }
+      updateFormDisplays();
+
+      // 次のターンへ
+      hakaiState.turn++;
+      updateTurnDisplay();
+
+      // 入力欄はクリアしておく
+      for (let i = 1; i <= 5; i++) {
+        const inp = el(`dmg-${i}`);
+        if (inp) inp.value = "";
+      }
+
+      // ターン終了後は ①ダメージスロットにフォーカスを戻す
+      const firstInput = el("dmg-1");
+      if (firstInput) {
+        firstInput.focus();
+        firstInput.select();
+      }
+
+      return;
+    }
+
+    // ★通常時：
+    // 「いまのターン」のダメージから推察された形態を
+    // 右スロットの「そのターンの行」に確定する。
+    //
+    // 1T目は常に①のままでよい仕様なので、
+    // 書き込むのは 2T目以降だけにする。
+    if (hakaiState.turn >= 2 && hakaiState.turn <= 8) {
+      hakaiState.history[hakaiState.turn - 1] = hakaiState.currentForm;
+    }
+    updateFormDisplays();
+
+    // 次のターンへ
+    hakaiState.turn++;
+    updateTurnDisplay();
+
+    // 入力欄クリア
+    for (let i = 1; i <= 5; i++) {
+      const inp = el(`dmg-${i}`);
+      if (inp) inp.value = "";
+    }
+
+    // ターン終了後は ①ダメージスロットにフォーカスを戻す
+    const firstInput = el("dmg-1");
+    if (firstInput) {
+      firstInput.focus();
+      firstInput.select();
+    }
+
+    // 次ターン開始時点では、右スロットの「そのターンの行」はまだ「？」のまま。
+    // そのターンのダメージ入力が進み、形態推察が一意に確定したら
+    // endTurn() 呼び出し時にそのターンの行へ書き込まれる。
+  }
+
+
+
+  function revertLastEdit() {
+    // 同一ターン内のダメージ入力履歴がなければ何もしない
+    if (!Array.isArray(hakaiState.editHistory) || hakaiState.editHistory.length === 0) {
+      return;
+    }
+
+    // 直近のダメージ入力1件分を取り出す
+    const last = hakaiState.editHistory.pop(); // { slot, prevHp }
+
+    // 対象スロットの入力をクリアしつつ、カーソルも戻す
+    const input = el(`dmg-${last.slot}`);
+    if (input) {
+      input.value = "";
+
+      // カーソルを「最後に巻き戻したスロット」に戻す
+      input.focus();
+      input.select();
+    }
+
+    // HPを巻き戻す
+    hakaiState.hp = last.prevHp;
+    updateHpDisplay();
+
+    // 入力が1つ減ったので、現在形態も改めて推察し直す
+    if (!hakaiState.darkMode) {
+      hakaiState.currentForm = estimateFormFromInputs();
+      updateFormDisplays();
+    }
+
+    // 既存フィールドも履歴の末尾に合わせて更新（使っていないが整合性のため）
+    if (hakaiState.editHistory.length > 0) {
+      const prev = hakaiState.editHistory[hakaiState.editHistory.length - 1];
+      hakaiState.lastEdit = prev.slot;
+      hakaiState.lastHp = prev.prevHp;
+    } else {
+      hakaiState.lastEdit = null;
+      hakaiState.lastHp = null;
+    }
+  }
+
+
+
+  function beastBreak() {
+    // 獣魔撃破ボタン：本体HPに500ダメージ（そのまま）
+    hakaiState.lastHp = hakaiState.hp;
+    hakaiState.lastEdit = null; // スロット入力ではないので lastEdit はクリア
+    const nextHp = hakaiState.hp - 500;
+    hakaiState.hp = nextHp < 0 ? 0 : nextHp;
+    updateHpDisplay();
+  }
+
+  function enterDarkMode() {
+    hakaiState.darkMode = true;
+    hakaiState.currentForm = "闇";
+
+    // 以降のターンは履歴上も闇で塗りつぶす前提。
+    for (let i = 0; i < 8; i++) {
+      if (hakaiState.history[i] === "？") {
+        hakaiState.history[i] = "闇";
+      }
+    }
+    updateFormDisplays();
+  }
+
+  function resetAll() {
+    hakaiState.hp = 7500;
+    hakaiState.turn = 1;
+    hakaiState.lastEdit = null;
+    hakaiState.lastHp = null;
+    hakaiState.editHistory = []; // リターン用履歴もリセット
+    hakaiState.history = ["①","？","？","？","？","？","？","？"];
+    hakaiState.currentForm = "①";
+    hakaiState.darkMode = false;
+
+
+    for (let i = 1; i <= 5; i++) {
+      const inp = el(`dmg-${i}`);
+      if (inp) inp.value = "";
+    }
+
+    rebuildPatternDamageTable();
+    updateHpDisplay();
+    updateTurnDisplay();
+    updateFormDisplays();
+  }
+
+  // =========================================================
+  // 9. イベント初期化
+  // =========================================================
+
+  function initHakaiLogic() {
+    // まず乱数幅テーブルを構築
+    rebuildPatternDamageTable();
+
+    // ダメージ入力欄
+    for (let slot = 1; slot <= 5; slot++) {
+      const inp = el(`dmg-${slot}`);
+      if (!inp) continue;
+
+      inp.addEventListener("change", function () {
+        // HP減算
+        applyDamage(slot);
+        // 形態推察＆現在形態表示（非0がある限り判定可能）
+        updateCurrentFormFromInputs();
+
+      });
+      inp.addEventListener("keydown", function (e) {
+        if (e.key === "Enter") {
+          e.preventDefault();
+
+          if (slot < 5) {
+            // ①〜④までは次のダメージスロットへフォーカス
+            const nextInput = el(`dmg-${slot + 1}`);
+            if (nextInput) {
+              nextInput.focus();
+              nextInput.select();
+            }
+          } else {
+            // ⑤スロットで Enter → 「ターン終了」ボタンへフォーカス
+            const endTurnBtn = el("endturn-btn");
+            if (endTurnBtn) {
+              endTurnBtn.focus();
+            }
+          }
+        }
+      });
+    }
+
+    // ボタン類
+    const beastBtn = el("beast-btn");
+    if (beastBtn) {
+      beastBtn.addEventListener("click", function () {
+        beastBreak();
+      });
+    }
+
+    const returnBtn = el("return-btn");
+    if (returnBtn) {
+      returnBtn.addEventListener("click", function () {
+        revertLastEdit();
+      });
+    }
+
+    const darkBtn = el("dark-btn");
+    if (darkBtn) {
+      darkBtn.addEventListener("click", function () {
+        enterDarkMode();
+      });
+    }
+
+    const endTurnBtn = el("endturn-btn");
+    if (endTurnBtn) {
+      endTurnBtn.addEventListener("click", function () {
+        endTurn();
+      });
+
+      // フォーカスが「ターン終了」ボタン上にある状態で Enter でもターン終了できるようにする
+      endTurnBtn.addEventListener("keydown", function (e) {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          endTurnBtn.click();
+        }
+      });
+    }
+
+
+    const resetBtn = el("reset-btn");
+    if (resetBtn) {
+      resetBtn.addEventListener("click", function () {
+        resetAll();
+      });
+    }
+
+    // 初期表示
+    updateHpDisplay();
+    updateTurnDisplay();
+    updateFormDisplays();
+  }
+
+  // =========================================================
+  // 10. 全体初期化（HTML生成＋ロジック初期化）
+  // =========================================================
+
+  function initHakaiBoxFromJs() {
+    // HTML側は <div id="rta-v2-bottom"></div> だけ残しておいてください。
+    var root = document.getElementById('rta-v2-bottom');
+    if (!root) return;
+
+    // 中身を JS でまるごと生成
+    root.innerHTML = buildHakaiBoxHtml();
+
+    // 生成後にロジック初期化
+    initHakaiLogic();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initHakaiBoxFromJs);
+  } else {
+    initHakaiBoxFromJs();
+  }
+})();

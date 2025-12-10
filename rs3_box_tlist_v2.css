@@ -1,0 +1,88 @@
+/* 技チェックブロック（TECH LIST）160×360 */
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont,
+               "Yu Gothic", "メイリオ", sans-serif;
+  font-size: 12px;
+}
+
+/* 右上スロット用コンテナ
+   ※外枠は本体CSS側で管理するので border は付けない */
+#rta-v2-top-right {
+  width: 167.4px;
+  height: 360px;
+  box-sizing: border-box;
+  padding: 0;
+  display: flex;
+  align-items: stretch;
+  justify-content: stretch;
+}
+
+/* テーブル全体：スロットいっぱいに広げる */
+.tlist-table {
+  width: 167.4px;
+  height: 360px;
+  border-collapse: collapse;
+  table-layout: fixed;
+  box-sizing: border-box;
+  border: 1px solid #444;
+}
+
+/* ヘッダー行 */
+.tlist-table thead th {
+  height: 24px;
+  padding: 0;
+  font-size: 12px;
+  font-weight: bold;
+  text-align: center;
+  background-color: #eef3ff;
+  border: 1px solid #444;
+  box-sizing: border-box;
+}
+
+/* 列幅 */
+.col-name {
+  width: 100px;
+}
+
+.col-gokui{
+  width: 34px;
+}
+.col-main {
+  width: 34px;
+}
+
+/* 本文行：12行 × 28px = 336px を想定（24 + 336 = 360） */
+.tlist-table tbody td {
+  text-align: center;
+  height: 28px;
+  padding: 0;
+  font-size: 12px;
+  border: 1px solid #444;
+  box-sizing: border-box;
+}
+
+/* 技名セル */
+.tech-name-cell {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* チェックセル共通 */
+.tech-check-cell {
+  text-align: center;
+}
+
+/* チェックボックス */
+.chk-gokui,
+.chk-main {
+  margin: 0;
+  padding: 0;
+}

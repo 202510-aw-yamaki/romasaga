@@ -1,0 +1,250 @@
+/* 分身剣想定ダメージ＋形態X ブロック用 CSS （右上 160×360 専用）
+   対象HTML: rs3_box_bunshin_pat_v2.html
+   ・上部 168×260 : 分身剣想定ダメージ一覧（5スロット）
+   ・下部 168× 80 : 破壊するものの形態選択エリア
+*/
+
+/* --------------------------------
+   HTML全体の基本設定
+   （単体プレビュー用。親画面側CSSより後に読み込まれる想定はない）
+---------------------------------- */
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont,
+               "Yu Gothic", "メイリオ", sans-serif;
+  font-size: 12px;
+  color: #000;
+}
+
+/* --------------------------------
+   右上スロットのルートコンテナ
+   ・単体表示時にも 160×360 を維持するための枠
+---------------------------------- */
+
+#rta-v2-top-right {
+  width: 168px;
+  height: 360px;
+  box-sizing: border-box;
+}
+
+/* 全体ボックス（分身DMG＋形態X全体） */
+.bunshinpat-box {
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  border: 1px solid #666;
+  background-color: #fdfdfd;
+  display: flex;
+  flex-direction: column;
+}
+
+/* --------------------------------
+   上部：分身剣想定ダメージエリア（おおよそ 168×260）
+---------------------------------- */
+
+.bunshin-dmg-area {
+  /* 下部の形態エリアを 80px と想定し、それ以外を上部として扱う */
+  height: calc(100% - 90px);
+  box-sizing: border-box;
+  padding: 2px;
+  display: flex;
+  flex-direction: column;
+  row-gap: 2px;
+}
+
+/* 見出し「分身剣想定ダメージ」 */
+.bunshin-title {
+  height: 18px;
+  line-height: 18px;
+  font-size: 11px;
+  font-weight: bold;
+  text-align: center;
+  background-color: #eef3ff;
+  border: 1px solid #bbb;
+  box-sizing: border-box;
+}
+
+/* エントリー全体（①〜⑤キャラごとの帯） */
+.bunshin-entry {
+  box-sizing: border-box;
+  border: 1px solid #ccc;
+  padding: 2px;
+  margin-top: 2px;
+}
+
+/* エントリー内の1行（「キャラ＋最大」「剣レベル＋最小」など） */
+.bunshin-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  column-gap: 2px;
+  margin-top: 1px;
+}
+
+/* 左端のスロットラベル（①キャラ／剣レベ…） */
+.bunshinpat-box .slot-label {
+  flex: 0 0 60px;
+  font-size: 12px;
+  box-sizing: border-box;
+}
+
+/* 「最大」「最小」のラベル */
+.bunshinpat-box .dmg-label {
+  flex: 0 0 28px;
+  font-size: 12px;
+  text-align: center;
+}
+
+/* ダメージ入力欄（最大／最小共通） */
+.bunshinpat-box .dmg-input {
+  flex: 1 1 Auto;
+  box-sizing: border-box;
+  width: 60px;
+  height: 18px;
+  padding: 0 2px;
+  font-size: 12px;
+  text-align: right;
+}
+
+/* 剣レベル表示（「剣レベ XX」中の XX 部分） */
+.sword-lv {
+  font-weight: bold;
+  margin-left: 2px;
+}
+
+/* --------------------------------
+   下部：破壊するものの形態エリア（約 168×80）
+   ・中央の四角を左右より大きく
+   ・左右はサブ表示（灰色）、中央はメイン表示（黒）
+---------------------------------- */
+
+.patternx-area {
+  height: 96px;
+  box-sizing: border-box;
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 「破壊するものの形態」タイトル */
+.patternx-title {
+  height: 18px;
+  line-height: 18px;
+  font-size: 11px;
+  font-weight: bold;
+  text-align: center;
+  margin: 0 0 4px 0;
+  background-color: #eef3ff;
+  border: 1px solid #bbb;
+  box-sizing: border-box;
+}
+
+/* 行全体のベース（必要に応じて再利用可能） */
+.patternx-row {
+  display: flex;
+  align-items: center;
+}
+
+/* 選択UI本体（[左表示][←][中央][→][右表示] の1行） */
+.patternx-selector {
+  flex: 1;
+  justify-content: space-between;
+  column-gap: 2px;
+}
+
+/* 獣魔形態 HP 表示行 */
+.patternx-hp-row {
+  margin-top: 4px;           /* 形態選択行との間に少し余白 */
+  justify-content: center;   /* 中央寄せ */
+  column-gap: 4px;           /* ラベルと数値の間隔 */
+  font-size: 12px;           /* ひとまわり小さめ */
+}
+
+/* 「獣魔形態HP」ラベル側 */
+.patternx-hp-label {
+  white-space: nowrap;       /* 改行しないように固定 */
+}
+
+/* HP数値側（後でJSから書き換える） */
+.patternx-hp-value {
+  min-width: 64px;           /* 桁数が変わってもガタつきにくくするための幅 */
+  text-align: right;         /* 数値は右寄せ */
+  font-weight: bold;
+  font-family: "ＭＳ ゴシック", "Consolas", monospace;
+}
+
+
+
+/* 左右・中央の共通ボックス枠 */
+.patternx-box {
+  box-sizing: border-box;
+  border: 1px solid #888;
+  background-color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+text-align: center;
+}
+
+/* 左右の小さいボックス（サブ表示用） */
+.patternx-box-sub {
+  width: 22px;
+  height: 40px;
+}
+
+/* 中央の大きいボックス（メイン表示用） */
+.patternx-box-main {
+  width: 40px;
+  height: 48px;
+}
+
+/* 矢印ボタン */
+.patternx-arrow {
+  width: 18px;
+  height: 22px;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  border: 1px solid #888;
+  background-color: #f5f5f5;
+  font-size: 10px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+/* ラベル共通（左右・中央） */
+.patternx-label-main,
+.patternx-label-sub {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1;
+}
+
+/* 中央：黒（選択中） */
+.patternx-label-main {
+  font-size: 20px;
+  font-weight: bold;
+  color: #000000;
+}
+
+/* 左右：灰色（前後の候補） */
+.patternx-label-sub {
+  color: #999999;
+}
+
+/* 形態定義リスト（内部データ用。画面には表示しない） */
+.patternx-def-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: none;
+}

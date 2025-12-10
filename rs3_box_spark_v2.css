@@ -1,0 +1,162 @@
+/* 分身剣閃きブロック（SPARK BLOCK）300×105 */
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont,
+               "Yu Gothic", "メイリオ", sans-serif;
+  font-size: 12px;
+}
+
+/* 左上サブスロット用コンテナ */
+#rta-v2-top-ls {
+  width: 300px;
+  height: 105px;
+  box-sizing: border-box;
+  /* v2本体側で枠線を管理するのでここでは付けない */
+  /* border: 1px solid #444; */
+  padding: 0;
+  display: flex;
+  align-items: stretch;
+  justify-content: stretch;
+}
+
+/* 外枠テーブル（全体300×105のうち、タイトル行+本体行） */
+.spark-outer {
+  width: 300px;
+  height: 105px;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+/* 枠線：外枠＋内枠ともに同じ色で統一 */
+.spark-outer,
+.spark-outer th,
+.spark-outer td {
+  border: 0.5px solid #444;
+  box-sizing: border-box; }
+
+
+/* タイトル行（約25px想定） */
+.spark-title {
+  height: 25px;
+  padding: 0 0px;
+  font-size: 12px;
+  font-weight: bold;
+  text-align: center;
+  background-color: #eef3ff;
+}
+
+/* 本体セル：内部テーブルを1つ持つ */
+.spark-container-cell {
+  padding: 0;
+}
+
+/* 内部テーブル（フォル／ビュネ行） */
+.spark-inner {
+  width: 300px;
+  table-layout: fixed;
+  border-collapse: collapse;
+  border: none;
+  outline: none!important;
+}
+
+/* 内部テーブルのセル共通 */
+.spark-inner td {
+  padding: 0 2px;
+  vertical-align: middle;
+  box-sizing: border-box;
+}
+
+/* 列幅指定：72 + 145 + 82 */
+.spark-inner tr td:nth-child(1) {
+  width: 72px;   /* 対フォル／対ビュネ */
+}
+
+.spark-inner tr td:nth-child(2) {
+  width: 145px;  /* 閃き回数＋スピンボタン */
+}
+
+.spark-inner tr td:nth-child(3) {
+  width: 82px;   /* 王冠ラベル＋％ */
+}
+
+/* ラベル列（対フォル／対ビュネ） */
+.spark-label {
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* 閃き回数列・確率列テキスト */
+.spark-row {
+  font-size: 11px;
+  white-space: nowrap; /* 折り返し防止 */
+}
+
+/* 閃き回数＋スピンボックス */
+.spin-box {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 2px;
+  margin-left: 4px;
+}
+
+/* 数値入力（閃き回数） */
+.num-input.spark-count-input {
+  width: 40px;
+  box-sizing: border-box;
+  padding: 1px 2px;
+  font-size: 12px;
+  text-align: center;
+  -moz-appearance: textfield;  /* Firefox用：標準スピンを消す */
+}
+
+/* スピンボタン（▲▼ 横並び） */
+.spin-buttons {
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+}
+
+.spin-btn {
+  font-size: 10px;
+  padding: 1px 2px;
+  min-width: 14px;
+  box-sizing: border-box;
+}
+
+/* 王冠ラベル＋確率表示 */
+.spark-crown-label {
+  margin-right: 4px;
+  font-size: 11px;
+}
+
+.spark-rate {
+  font-size: 11px;
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+/* 行の高さ指定 */
+/* 対フォル（上段＋下段）合計50px → 各25pxずつ */
+.spark-inner tbody tr:nth-child(1) td,
+.spark-inner tbody tr:nth-child(2) td {
+  height: 25px;
+}
+
+/* 対ビュネ行を27pxに */
+.spark-inner tbody tr:nth-child(3) td {
+  height: 27.5px;
+}
+
+/* Chrome / Edge / Safari：閃き回数入力の内蔵スピンを消す */
+.spark-count-input::-webkit-outer-spin-button,
+.spark-count-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}

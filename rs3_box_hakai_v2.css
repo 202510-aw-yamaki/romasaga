@@ -1,0 +1,285 @@
+/* 破壊ツール下段（分身ダメージ入力＋パターン推察）468×108 */
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont,
+               "Yu Gothic", "メイリオ", sans-serif;
+  font-size: 12px;
+}
+
+/* 下段スロット用コンテナ */
+#rta-v2-bottom {
+  width: 468px;
+  height: 108px;
+  box-sizing: border-box;
+  padding: 0;
+  display: flex;
+  align-items: stretch;
+  justify-content: stretch;
+}
+
+/* 全体：左 350 + 右 112 + gap 6 = 468 */
+.hakai-bottom-box {
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: row;
+  gap: 6px;
+}
+
+/* 左側：分身剣ダメージ入力（約 350×108） */
+.hakai-dmg-area {
+  width: 350px;
+  height: 100%;
+  box-sizing: border-box;
+  border: 1px solid #444;
+  padding: 2px 4px;
+  display: flex;
+  flex-direction: column;
+  background-color: #ffffff;
+}
+
+/* 見出し＋ボタン行（獣魔撃破／リターン） */
+.hakai-dmg-header {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;    /* ★ タイトル＋ボタンを左寄せで詰める */
+  margin-bottom: 2px;
+}
+
+.hakai-dmg-title {
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.hakai-dmg-header-buttons {
+  display: flex;
+  gap: 2px;                       /* ★ ボタン同士の間隔をやや狭く */
+  margin-left: 4px;               /* ★ タイトルとの間は少しだけ */
+}
+
+.hakai-header-btn {
+  font-size: 11px;
+  padding: 2px 6px;
+  box-sizing: border-box;
+}
+
+/* ダメージ入力グリッド ①〜⑤＋ターン数 */
+.dmg-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-rows: auto auto;
+  gap: 2px;
+  font-size: 11px;
+}
+
+.dmg-slot {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid #d0d0d0;
+  padding: 1px 3px;
+  box-sizing: border-box;
+  background: #ffffff;
+}
+
+
+.hakai-bottom-box .slot-label {
+  font-size: 11px;
+  font-weight: bold;
+  width: 14px;
+  text-align: center;
+}
+
+.hakai-bottom-box .dmg-input {
+  width: 72px;
+  text-align: right;
+  font-size: 11px;
+  padding: 1px 2px;
+  box-sizing: border-box;
+}
+
+/* ターン数表示セル */
+.turn-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #d0d0d0;
+  box-sizing: border-box;
+}
+
+.turn-count-value {
+  font-size: 12px;
+  font-weight: bold;
+}
+
+/* 下側：残りHP＋ターン終了＋リセット（左右に分離） */
+.hakai-bottom-row {
+  margin-top: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;   /* ★ 左グループと右端リセットで両端揃え */
+}
+
+/* 左側：残りHP＋ターン終了をまとめる */
+.hakai-bottom-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* HPパネル（1行表示） */
+.hp-panel {
+  border: 1px solid #a0a0a0;
+  padding: 2px 4px;
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  background-color: #ffffff;
+  font-size: 11px;
+}
+
+.hp-caption {
+  margin: 0 4px 0 0;
+}
+
+.hp-value {
+  font-size: 16px;
+  font-weight: bold;
+  text-align: right;
+  min-width: 70px;
+}
+
+/* 下段ボタン（ターン終了／リセット共通） */
+.hakai-bottom-btn {
+  font-size: 11px;
+  padding: 2px 6px;
+  box-sizing: border-box;
+}
+
+/* 右端リセット専用（今は見た目同じだが、将来の調整余地用） */
+.hakai-reset-right {
+  /* ここに右端だけの調整が必要なら追加 */
+}
+
+/* 右側：パターン推察エリア（約 112×108） */
+.hakai-pattern-area {
+  width: 112px;
+  height: 100%;
+  box-sizing: border-box;
+  border: 1px solid #444;
+  padding: 2px 2px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;   
+  background-color: #ffffff;
+}
+
+/* タイトル（高さは前回の指定どおり） */
+.hakai-pattern-title {
+  height: 14px;
+  line-height: 14px;
+  font-size: 12px;
+  font-weight: bold;
+  text-align: center;
+  background-color: #eef3ff;
+  border-bottom: 1px solid #ccc;
+  box-sizing: border-box;
+}
+
+/* テーブル本体 */
+.hakai-pattern-table {
+  width: 100%;
+  height: calc(100% - 14px);
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 11px;
+}
+
+.hakai-pattern-table,
+.hakai-pattern-table th,
+.hakai-pattern-table td {
+  border: 1px solid #444;
+  box-sizing: border-box;
+}
+
+.hakai-pattern-head {
+  text-align: center;
+  white-space: nowrap;
+  padding: 0;
+}
+
+/* パターン行 */
+.pat-label {
+  width: 28px;
+  text-align: center;
+}
+
+.pat-percent {
+  text-align: right;
+  padding: 0 2px;
+  font-family: Consolas, "Courier New", monospace;
+}
+
+/* 右側：現在形態表示ブロック＋8ターン履歴 ------------------------ */
+
+/* 上段：現在形態表示 */
+.pattern-current-box {
+  height: 20px;
+  box-sizing: border-box;
+  border: 1px solid #444;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  background-color: #eef3ff;
+}
+
+.pattern-current-label {
+  font-size: 11px;
+}
+
+.pattern-current-value {
+  font-size: 13px;
+  font-weight: bold;
+}
+
+/* 下段：8ターン履歴テーブル（4行×4列） */
+.pattern-history-table {
+  width: 100%;
+  flex: 1;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 11px;
+}
+
+.pattern-history-table td {
+  border: 1px solid #444;
+  box-sizing: border-box;
+  text-align: center;
+  padding: 0;
+}
+
+/* 「1T」「2T」などのターン番号セル */
+.hist-turn-label {
+  width: 24px;
+  font-weight: bold;
+}
+
+/* 形態セル（①〜④／闇／？） */
+.hist-form-cell {
+  width: 28px;
+  font-size: 13px;
+  font-weight: bold;
+}
+
+/* 将来：現在ターンを強調するためのクラス（JSから付け替え予定） */
+.hist-form-cell.current {
+  background-color: #ffe8c0;
+}

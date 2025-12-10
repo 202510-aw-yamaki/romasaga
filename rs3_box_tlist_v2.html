@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>技チェックブロック（TECH LIST）</title>
+  <link rel="stylesheet" href="rs3_box_tlist_v2.css">
+</head>
+<body>
+
+  <!-- 開発メモ：
+    ・箱サイズは 160×360 固定（TOP RIGHT 用）
+    ・列1：技名
+      列2：極意化済の技チェック
+      列3：主が閃いた技チェック
+    ・技リストは固定12行（メモ用）
+    ・kidou_js との連携は行わず、完全に手動メモ用
+  -->
+
+  <!-- 右上スロット用コンテナ（160×360） -->
+  <div id="rta-v2-top-right">
+
+    <table class="tlist-table">
+      <thead>
+        <tr>
+          <th class="col-tech">技名</th>
+          <th class="col-gokui">極</th>
+          <th class="col-main">閃</th>
+        </tr>
+      </thead>
+      <tbody>
+
+        <!-- 1〜12行目：固定技リスト -->
+
+        <tr>
+          <td class="tech-name-cell">
+            <span class="tech-name-text">なぎ払い</span>
+          </td>
+          <td class="tech-check-cell">
+            <input type="checkbox" class="chk-gokui" id="gokui-1" aria-label="なぎ払いの極意化済チェック">
+          </td>
+          <td class="tech-check-cell">
+            <input type="checkbox" class="chk-main" id="main-1" aria-label="なぎ払いを主が閃いたチェック">
+          </td>
+        </tr>
+
+        <tr>
+          <td class="tech-name-cell">
+            <span class="tech-name-text">かすみ二段</span>
+          </td>
+          <td class="tech-check-cell">
+            <input type="checkbox" class="chk-gokui" id="gokui-2" aria-label="かすみ二段の極意化済チェック">
+          </td>
+          <td class="tech-check-cell">
+            <input type="checkbox" class="chk-main" id="main-2" aria-label="かすみ二段を主が閃いたチェック">
+          </td>
+        </tr>
+
+        <tr>
+          <td class="tech-name-cell">
+            <span class="tech-name-text">失礼剣</span>
+          </td>
+          <td class="tech-check-cell">
+            <input type="checkbox" class="chk-gokui" id="gokui-3" aria-label="失礼剣の極意化済チェック">
+          </td>
+          <td class="tech-check-cell">
+            <input type="checkbox" class="chk-main" id="main-3" aria-label="失礼剣を主が閃いたチェック">
+          </td>
+        </tr>
+
+        <tr>
+          <td class="tech-name-cell">
+            <span class="tech-name-text">十文字切り</span>
+          </td>
+          <td class="tech-check-cell">
+            <input type="checkbox" class="chk-gokui" id="gokui-4" aria-label="十文字切りの極意化済チェック">
+          </td>
+          <td class="tech-check-cell">
+            <input type="checkbox" class="chk-main" id="main-4" aria-label="十文字切りを主が閃いたチェック">
+          </td>
+        </tr>
+
+        <tr>
+          <td class="tech-name-cell">
+            <span class="tech-name-text">飛水断ち</span>
+          </td>
+          <td class="tech-check-cell">
+            <input type="checkbox" class="chk-gokui" id="gokui-5" aria-label="飛水断ちの極意化済チェック">
+          </td>
+          <td class="tech-check-cell">
+            <input type="checkbox" class="chk-main" id="main-5" aria-label="飛水断ちを主が閃いたチェック">
+          </td>
+        </tr>
+
+        <tr>
+          <td class="tech-name-cell">
+            <span class="tech-name-text">龍尾返し</span>
+          </td>
+          <td class="tech-check-cell">
+            <input type="checkbox" class="chk-gokui" id="gokui-6" aria-label="龍尾返しの極意化済チェック">
+          </td>
+          <td class="tech-check-cell">
+            <input type="checkbox" class="chk-main" id="main-6" aria-label="龍尾返しを主が閃いたチェック">
+          </td>
+        </tr>
+
+        <tr>
+          <td class="tech-name-cell">
+            <span class="tech-name-text">疾風剣</span>
+          </td>
+          <td class="tech-check-cell">
+            <input type="checkbox" class="chk-gokui" id="gokui-7" aria-label="疾風剣の極意化済チェック">
+          </td>
+          <td class="tech-check-cell">
+            <input type="checkbox" class="chk-main" id="main-7" aria-label="疾風剣を主が閃いたチェック">
+          </td>
+        </tr>
+
+        <tr>
+          <td class="tech-name-cell">
+            <span class="tech-name-text">バックスタップ</span>
+          </td>
+          <td class="tech-check-cell">
+            <input type="checkbox" class="chk-gokui" id="gokui-8" aria-label="バックスタップの極意化済チェック">
+          </td>
+          <td class="tech-check-cell">
+            <input type="checkbox" class="chk-main" id="main-8" aria-label="バックスタップを主が閃いたチェック">
+          </td>
+        </tr>
+
+        <tr>
+          <td class="tech-name-cell">
+            <span class="tech-name-text">亜空間斬り</span>
+          </td>
+          <td class="tech-check-cell">
+            <input type="checkbox" class="chk-gokui" id="gokui-9" aria-label="亜空間斬りの極意化済チェック">
+          </td>
+          <td class="tech-check-cell">
+            <input type="checkbox" class="chk-main" id="main-9" aria-label="亜空間斬りを主が閃いたチェック">
+          </td>
+        </tr>
+
+        <tr>
+          <td class="tech-name-cell">
+            <span class="tech-name-text">残像剣</span>
+          </td>
+          <td class="tech-check-cell">
+            <input type="checkbox" class="chk-gokui" id="gokui-10" aria-label="残像剣の極意化済チェック">
+          </td>
+          <td class="tech-check-cell">
+            <input type="checkbox" class="chk-main" id="main-10" aria-label="残像剣を主が閃いたチェック">
+          </td>
+        </tr>
+
+        <tr>
+          <td class="tech-name-cell">
+            <span class="tech-name-text">五月雨斬り</span>
+          </td>
+          <td class="tech-check-cell">
+            <input type="checkbox" class="chk-gokui" id="gokui-11" aria-label="五月雨斬りの極意化済チェック">
+          </td>
+          <td class="tech-check-cell">
+            <input type="checkbox" class="chk-main" id="main-11" aria-label="五月雨斬りを主が閃いたチェック">
+          </td>
+        </tr>
+
+        <tr>
+          <td class="tech-name-cell">
+            <span class="tech-name-text">分身剣</span>
+          </td>
+          <td class="tech-check-cell">
+            <input type="checkbox" class="chk-gokui" id="gokui-12" aria-label="分身剣の極意化済チェック">
+          </td>
+          <td class="tech-check-cell">
+            <input type="checkbox" class="chk-main" id="main-12" aria-label="分身剣を主が閃いたチェック">
+          </td>
+        </tr>
+
+      </tbody>
+    </table>
+
+  </div>
+
+</body>
+</html>
