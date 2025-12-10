@@ -4,6 +4,8 @@ function initCharSlotBox(containerId) {
     return;
   }
 
+  // NOTE: option 要素はプレースホルダ。実際のキャラ一覧は
+  // rs3_rta_v2_char_param.js の初期化処理で RS3_CHAR_DATA から上書きする。
   root.innerHTML = `
           <div class="rta-v2-inner-block block-char-otomo">
             <table class="rta-v2-char-table">

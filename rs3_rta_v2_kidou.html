@@ -623,6 +623,12 @@
       if (typeof initCharSlotBox === "function") {
         initCharSlotBox("rta-v2-top-lm");
       }
+
+      // DOM構築 → キャラスロットHTML生成 → RS3_CHAR_DATA 初期化の順序を保証
+      if (window.rs3_rta_v2_char_module &&
+          typeof window.rs3_rta_v2_char_module.init === "function") {
+        window.rs3_rta_v2_char_module.init();
+      }
       // ------------------------------------------------------
       // お供用リセットボタン：「起動直後の状態」に戻す
       // ------------------------------------------------------

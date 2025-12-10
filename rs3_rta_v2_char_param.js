@@ -504,6 +504,9 @@ function applyCharSelectionForSlot(slot, charIdOrNull) {
     }
   }
 
+  // ----------------------------------------------------------
+  // 7. 初期化
+  // ----------------------------------------------------------
   function initCharParam() {
     initAllCharSelects();
 
@@ -541,46 +544,8 @@ function applyCharSelectionForSlot(slot, charIdOrNull) {
     }
   }
 
-
   // ----------------------------------------------------------
-  // 7. 初期化 & 外部公開
-  // ----------------------------------------------------------
-  function initCharParam() {
-    initAllCharSelects();
-
-    PARTY_SLOTS.forEach(function (slot) {
-      const sel = byId(slot.charSelectId);
-      if (!sel) return;
-
-      const defaultId = DEFAULT_PARTY[slot.roleKey];
-
-      if (typeof defaultId === "number") {
-        sel.value = String(defaultId);
-        applyCharSelectionForSlot(slot, defaultId);
-      } else if (sel.options.length > 0) {
-        const firstId = getIntOrNull(sel.options[0].value);
-        if (firstId != null) {
-          sel.value = sel.options[0].value;
-          applyCharSelectionForSlot(slot, firstId);
-        } else {
-          applyCharSelectionForSlot(slot, null);
-        }
-      } else {
-        applyCharSelectionForSlot(slot, null);
-      }
-    });
-
-    attachCharSelectHandlers();
-    initSupportChar();
-
-    if (global.rs3_rta_v2_bunshin_link &&
-        typeof global.rs3_rta_v2_bunshin_link.recalc === "function") {
-      global.rs3_rta_v2_bunshin_link.recalc();
-    }
-  }
-
-  // ----------------------------------------------------------
-  // 7. スピンボタン（▲▼）共通処理
+  // 8. スピンボタン（▲▼）共通処理
   //   ・剣レベル／JP：1刻み
   //   ・お供HP：15刻み（step属性に従う）
   //   ・お供HPは基準値より小さくならないようにし、
@@ -619,13 +584,13 @@ function applyCharSelectionForSlot(slot, charIdOrNull) {
     if (max != null && value > max) value = max;
 
     input.value = String(value);
-  
-  // ★ ここから追加：もともとブラウザがやっていた input/change を自前で飛ばす
-  var evInput = new Event("input",  { bubbles: true });
-  var evChange = new Event("change", { bubbles: true });
-  input.dispatchEvent(evInput);
-  input.dispatchEvent(evChange);
-}
+
+    // ★ ここから追加：もともとブラウザがやっていた input/change を自前で飛ばす
+    var evInput = new Event("input",  { bubbles: true });
+    var evChange = new Event("change", { bubbles: true });
+    input.dispatchEvent(evInput);
+    input.dispatchEvent(evChange);
+  }
 
   // お供HP → お供LV の反映
   function updateSupportLevelFromHp() {
@@ -730,14 +695,22 @@ function applyCharSelectionForSlot(slot, charIdOrNull) {
     }
   }
 
-
-  document.addEventListener("DOMContentLoaded", function () {
+  // ----------------------------------------------------------
+  // 9. 外部から呼ぶ初期化入口
+  // ----------------------------------------------------------
+  function initRtaV2CharModule() {
+    // NOTE: 先にキャラスロットHTMLを生成してから呼び出さないと
+    // byId("char-main") などが null となり、RS3_CHAR_DATA の反映に失敗する。
     initCharParam();
 
     // スピンボタンのイベントと、お供LV連動を初期化
     attachSpinHandlers();
     updateSupportLevelFromHp();  // 初期表示を基準HP・LV0に揃える
-  });
+  }
+
+  global.rs3_rta_v2_char_module = {
+    init: initRtaV2CharModule
+  };
 
   global.rs3_rta_v2_party_state = {
     getState: function () {
