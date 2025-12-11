@@ -45,15 +45,15 @@
           <!-- 1段目：①②③ -->
           <div class="dmg-slot current" data-slot="0">
             <span class="slot-label">①</span>
-            <input id="dmg-1" class="dmg-input" inputmode="numeric" pattern="[0-9\-]*">
+            <input id="dmg-1" class="dmg-input" inputmode="numeric" pattern="[0-9]*">
           </div>
           <div class="dmg-slot" data-slot="1">
             <span class="slot-label">②</span>
-            <input id="dmg-2" class="dmg-input" inputmode="numeric" pattern="[0-9\-]*">
+            <input id="dmg-2" class="dmg-input" inputmode="numeric" pattern="[0-9]*">
           </div>
           <div class="dmg-slot" data-slot="2">
             <span class="slot-label">③</span>
-            <input id="dmg-3" class="dmg-input" inputmode="numeric" pattern="[0-9\-]*">
+            <input id="dmg-3" class="dmg-input" inputmode="numeric" pattern="[0-9]*">
           </div>
 
           <!-- 2段目：ターン数／④／⑤ -->
@@ -62,11 +62,11 @@
           </div>
           <div class="dmg-slot" data-slot="3">
             <span class="slot-label">④</span>
-            <input id="dmg-4" class="dmg-input" inputmode="numeric" pattern="[0-9\-]*">
+            <input id="dmg-4" class="dmg-input" inputmode="numeric" pattern="[0-9]*">
           </div>
           <div class="dmg-slot" data-slot="4">
             <span class="slot-label">⑤</span>
-            <input id="dmg-5" class="dmg-input" inputmode="numeric" pattern="[0-9\-]*">
+            <input id="dmg-5" class="dmg-input" inputmode="numeric" pattern="[0-9]*">
           </div>
         </div>
 
