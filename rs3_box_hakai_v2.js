@@ -189,15 +189,6 @@
    * もし bunshin_link が未読み込みの場合のみ、同じマッピングに基づく簡易 DOM 参照でフォールバックする。
    */
   function getSwordLevelForSlot(slotIndex) {
-    if (global.rs3_rta_v2_bunshin_link &&
-        typeof global.rs3_rta_v2_bunshin_link.getSwordForSlot === "function") {
-      const v = global.rs3_rta_v2_bunshin_link.getSwordForSlot(slotIndex);
-      const n = Number(v);
-      if (!Number.isFinite(n)) return 0;
-      return Math.max(0, Math.min(50, Math.floor(n)));
-    }
-
-    // ---- フォールバック：DOM直参照（bunshin_link の PARTY_ROLES と同一マッピング）
     const SWORD_INPUT_ID_BY_ROLE = {
       A: "sword-main",
       B: "sword-ally1",
@@ -206,6 +197,34 @@
       E: "sword-ally4"
     };
 
+    function clampSwordLevel(v) {
+      const n = Number(v);
+      if (!Number.isFinite(n)) return 0;
+      return Math.max(0, Math.min(50, Math.floor(n)));
+    }
+
+    // 1. bunshin_link 側のAPIがあればそれを優先して使う
+    if (global.rs3_rta_v2_bunshin_link) {
+      const link = global.rs3_rta_v2_bunshin_link;
+
+      if (typeof link.getSwordForSlot === "function") {
+        return clampSwordLevel(link.getSwordForSlot(slotIndex));
+      }
+
+      // getSwordForSlot が無い場合でも formation 情報が取れるなら DOM 参照に流用する
+      if (typeof link.getFormationState === "function") {
+        const formation = link.getFormationState();
+        const roleFromFormation = formation && formation[slotIndex];
+        if (roleFromFormation && SWORD_INPUT_ID_BY_ROLE[roleFromFormation]) {
+          const input = document.getElementById(SWORD_INPUT_ID_BY_ROLE[roleFromFormation]);
+          if (input) {
+            return clampSwordLevel(input.value);
+          }
+        }
+      }
+    }
+
+    // 2. フォールバック：DOM直参照（bunshin_link の PARTY_ROLES と同一マッピング）
     const sel = document.getElementById("formation-slot-" + slotIndex);
     if (!sel) return 0;
 
@@ -216,10 +235,7 @@
     const input = document.getElementById(swordId);
     if (!input) return 0;
 
-    const v = Number(input.value);
-    if (!Number.isFinite(v)) return 0;
-    const clamped = Math.max(0, Math.min(50, Math.floor(v)));
-    return clamped;
+    return clampSwordLevel(input.value);
   }
 
   // =========================================================
@@ -697,6 +713,19 @@
   global.rs3_box_hakai_v2 = global.rs3_box_hakai_v2 || {};
   global.rs3_box_hakai_v2.refreshPatternTable = function () {
     rebuildPatternDamageTable();
+  };
+  global.rs3_box_hakai_v2.debugGetPatternTable = function () {
+    return JSON.parse(JSON.stringify(hakaiState.patternTable || null));
+  };
+  global.rs3_box_hakai_v2.debugDump = function () {
+    return {
+      formation: (global.rs3_rta_v2_bunshin_link &&
+                  typeof global.rs3_rta_v2_bunshin_link.getFormationState === "function" &&
+                  global.rs3_rta_v2_bunshin_link.getFormationState()) || null,
+      patternTable: hakaiState.patternTable,
+      currentForm: hakaiState.currentForm,
+      history: hakaiState.history.slice()
+    };
   };
   global.rs3_box_hakai_v2.init = function () {
     ensureInitialized();
