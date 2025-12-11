@@ -170,7 +170,10 @@
     history: ["①","？","？","？","？","？","？","？"], // 1T〜8Tの形態履歴
     currentForm: "①", // 現在形態（初期値①）
     darkMode: false,   // 闇突入フラグ
-    patternTable: null // 形態①〜④ × スロット1〜5 の {min, max} テーブル
+    patternTable: null, // 形態①〜④ × スロット1〜5 の {min, max} テーブル
+    // --- 修正ここから
+    patternMeta: null  // 乱数幅テーブル生成時のロールID／剣レベルスナップショット
+    // --- 修正ここまで
   };
 
 
@@ -238,6 +241,21 @@
     return clampSwordLevel(input.value);
   }
 
+  // --- 修正ここから
+  function getFormationRoleForSlot(slotIndex) {
+    if (global.rs3_rta_v2_bunshin_link &&
+        typeof global.rs3_rta_v2_bunshin_link.getFormationState === "function") {
+      const formation = global.rs3_rta_v2_bunshin_link.getFormationState();
+      return (formation && formation[slotIndex]) || null;
+    }
+
+    const sel = document.getElementById("formation-slot-" + slotIndex);
+    if (!sel) return null;
+    const roleId = sel.value;
+    return roleId || null;
+  }
+  // --- 修正ここまで
+
   // =========================================================
   // 5. 形態①〜④ × スロット1〜5 の乱数幅テーブルを構築
   // =========================================================
@@ -246,10 +264,17 @@
     if (!window.bunshin_sword_99 || typeof window.bunshin_sword_99.calcDamage !== "function") {
       // 分身剣計算ロジックが未読み込みの場合は何もしない
       hakaiState.patternTable = null;
+      // --- 修正ここから
+      hakaiState.patternMeta = null;
+      // --- 修正ここまで
       return;
     }
 
     const table = {}; // { "①": [ {min,max}, ...slot5 ], ... }
+    // --- 修正ここから
+    const rolesSnapshot = [];
+    const swordSnapshot = [];
+    // --- 修正ここまで
 
     // 形態①〜④
     HAKAI_PATTERNS.forEach(pat => {
@@ -258,7 +283,17 @@
       const slots = [];
 
       for (let slot = 1; slot <= 5; slot++) {
+        // スナップショット保存：いまの陣形と剣レベルを把握しておく
+        // （ダメージスロットとの紐付けを確実にするため）
+        const roleId = getFormationRoleForSlot(slot);
         const swordLv = getSwordLevelForSlot(slot);
+        // --- 修正ここから
+        if (rolesSnapshot.length < slot) {
+          rolesSnapshot.push(roleId);
+          swordSnapshot.push(swordLv);
+        }
+        // --- 修正ここまで
+
         const lv = Math.max(0, Math.min(50, Number(swordLv) || 0));
 
         const params = {
@@ -281,6 +316,12 @@
     });
 
     hakaiState.patternTable = table;
+    // --- 修正ここから
+    hakaiState.patternMeta = {
+      roles: rolesSnapshot,
+      swordLevels: swordSnapshot
+    };
+    // --- 修正ここまで
   }
 
   // =========================================================
@@ -311,6 +352,38 @@
   // 7. 形態推察ロジック
   // =========================================================
 
+  // --- 修正ここから
+  function ensurePatternTableUpToDate() {
+    const currentRoles = [];
+    const currentSwords = [];
+
+    for (let slot = 1; slot <= 5; slot++) {
+      currentRoles.push(getFormationRoleForSlot(slot));
+      currentSwords.push(getSwordLevelForSlot(slot));
+    }
+
+    if (!hakaiState.patternTable ||
+        !hakaiState.patternMeta ||
+        !Array.isArray(hakaiState.patternMeta.roles) ||
+        !Array.isArray(hakaiState.patternMeta.swordLevels)) {
+      rebuildPatternDamageTable();
+      return;
+    }
+
+    const prevRoles = hakaiState.patternMeta.roles;
+    const prevSwords = hakaiState.patternMeta.swordLevels;
+
+    const isSameRoles = prevRoles.length === currentRoles.length &&
+      prevRoles.every((v, idx) => v === currentRoles[idx]);
+    const isSameSwords = prevSwords.length === currentSwords.length &&
+      prevSwords.every((v, idx) => v === currentSwords[idx]);
+
+    if (!isSameRoles || !isSameSwords) {
+      rebuildPatternDamageTable();
+    }
+  }
+  // --- 修正ここまで
+
   /**
    * 現在ターン中に入力されているダメージ（非0）と patternTable を使って
    * そのターンの形態（①〜④）を推察する。
@@ -318,6 +391,9 @@
    * - 一致なしの場合は、直前の currentForm を維持する。
    */
   function estimateFormFromInputs() {
+    // --- 修正ここから
+    ensurePatternTableUpToDate();
+    // --- 修正ここまで
     const table = hakaiState.patternTable;
     if (!table) {
       // 乱数幅未計算なら現行形態を維持
