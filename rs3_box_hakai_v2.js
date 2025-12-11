@@ -192,7 +192,9 @@
     if (global.rs3_rta_v2_bunshin_link &&
         typeof global.rs3_rta_v2_bunshin_link.getSwordForSlot === "function") {
       const v = global.rs3_rta_v2_bunshin_link.getSwordForSlot(slotIndex);
-      return Number.isFinite(v) && v > 0 ? Math.floor(v) : 0;
+      const n = Number(v);
+      if (!Number.isFinite(n)) return 0;
+      return Math.max(0, Math.min(50, Math.floor(n)));
     }
 
     // ---- フォールバック：DOM直参照（bunshin_link の PARTY_ROLES と同一マッピング）
@@ -215,8 +217,9 @@
     if (!input) return 0;
 
     const v = Number(input.value);
-    if (!Number.isFinite(v) || v < 0) return 0;
-    return Math.floor(v);
+    if (!Number.isFinite(v)) return 0;
+    const clamped = Math.max(0, Math.min(50, Math.floor(v)));
+    return clamped;
   }
 
   // =========================================================
@@ -682,15 +685,22 @@
     initHakaiLogic();
   }
 
+  let initialized = false;
+
+  function ensureInitialized() {
+    if (initialized) return;
+    initialized = true;
+    initHakaiBoxFromJs();
+  }
+
   // 乱数幅テーブルの再構築だけを外部から呼び出せるように公開
   global.rs3_box_hakai_v2 = global.rs3_box_hakai_v2 || {};
   global.rs3_box_hakai_v2.refreshPatternTable = function () {
     rebuildPatternDamageTable();
   };
+  global.rs3_box_hakai_v2.init = function () {
+    ensureInitialized();
+  };
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initHakaiBoxFromJs);
-  } else {
-    initHakaiBoxFromJs();
-  }
+  // 外部から明示的に init を呼ぶ前提に切り替え
 })();

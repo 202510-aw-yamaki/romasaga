@@ -307,7 +307,16 @@
     }
   }
 
+  let initialized = false;
+
   function initBunshinLink() {
+    if (initialized) {
+      // 初期化済みでも最新状態へ合わせて再計算だけ走らせる
+      recalcAllBunshinDamage();
+      rebuildAllFormationSelects();
+      return;
+    }
+
     rebuildAllFormationSelects();
 
     attachFormationSelectHandlers();
@@ -316,11 +325,8 @@
     attachPatternXHandlers();
 
     recalcAllBunshinDamage();
+    initialized = true;
   }
-
-  document.addEventListener("DOMContentLoaded", function () {
-    initBunshinLink();
-  });
 
   global.rs3_rta_v2_bunshin_link = {
     getFormationState: function () {
@@ -330,6 +336,7 @@
       });
       return copy;
     },
+    init: initBunshinLink,
     recalc: recalcAllBunshinDamage,
     rebuildFormationSelects: rebuildAllFormationSelects,
     getSwordForSlot: getSwordLevelForFormationSlot
