@@ -215,12 +215,12 @@ body {
 
 /* 分身剣「適正なし」アイコン */
 .crown-icon.icon-nolight {
-  background-image: url("nolight.png");
+  background-image: url("../rs3rtagazou/nolight.png");
 }
 
 /* 分身剣「王冠あり」アイコン */
 .crown-icon.icon-crown {
-  background-image: url("oukan.png");
+  background-image: url("../rs3rtagazou/oukan.png");
 }
 
 /* 「何もなし」用。25×25の空枠だけにしたい場合 */
