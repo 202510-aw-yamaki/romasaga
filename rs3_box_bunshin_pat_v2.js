@@ -265,6 +265,16 @@ function updatePatternDisplay() {
   }
 
   /**
+   * スロット番号から前列／後列を判定するヘルパー。
+   * @param {number} slotNo 1〜5
+   * @returns {boolean}
+   */
+  function isFrontSlot(slotNo) {
+    if (!isValidSlot(slotNo)) return false;
+    return !!FRONT_SLOTS[slotNo - 1];
+  }
+
+  /**
    * 指定スロットのダメージ欄（最大／最小）をクリアする。
    */
   function clearSlotDamage(slotNo) {
@@ -360,6 +370,17 @@ function updatePatternDisplay() {
   }
 
   /**
+   * 外部向け：分身剣ダメージ（最小／最大）を計算し、陣形補正を適用した値を返す。
+   *
+   * @param {Object} options calcDamageFromOptions と同等
+   * @param {number} slotNo 1〜5（isFront 未指定時のデフォルト判定に利用）
+   * @returns {Object|null} { min, max, avg, hits }
+   */
+  function computeDamageRange(options, slotNo) {
+    return calcDamageFromOptions(options, slotNo);
+  }
+
+  /**
    * スロット1つ分の「剣レベル表示」と「最小／最大ダメージ」を更新する。
    *
    * @param {number} slotNo 1〜5
@@ -436,10 +457,13 @@ function updatePatternDisplay() {
     shiftPattern: shiftPattern,
 
     // 分身ダメージ関連
+    applyFormationBonus: applyFormationBonus,
+    isFrontSlot: isFrontSlot,
+    computeDamageRange: computeDamageRange,
     setSlot: setSlot,
     setAllSlots: setAllSlots,
     clearSlot: clearSlotDamage,
     clearAllSlots: clearAllSlots
   };
 
-})(this);
+  })(typeof window !== "undefined" ? window : this);

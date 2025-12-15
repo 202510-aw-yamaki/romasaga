@@ -298,10 +298,39 @@
           // base / sei は calcDamage 側の分身剣デフォルトを使用
         };
 
-        const res = window.bunshin_sword_99.calcDamage(params);
+        let range = null;
+        // PAT ボックス側と同じロジックを可能な限り再利用して、乱数幅の乖離を防ぐ
+        if (global.rs3_box_bunshin_pat_v2 &&
+            typeof global.rs3_box_bunshin_pat_v2.computeDamageRange === "function") {
+          range = global.rs3_box_bunshin_pat_v2.computeDamageRange({
+            swordLevel: params.lv,
+            weaponPower: params.wea,
+            enemyDef: params.def,
+            enemyVit: params.vit,
+            // isFront は slotNo に基づく PAT 側の既定判定を利用
+          }, slot);
+        }
+
+        // フォールバック：旧実装（必要に応じて陣形補正だけ PAT 側のヘルパーを使う）
+        if (!range) {
+          const res = window.bunshin_sword_99.calcDamage(params);
+          let min = Number(res && res.min) || 0;
+          let max = Number(res && res.max) || 0;
+
+          if (global.rs3_box_bunshin_pat_v2 &&
+              typeof global.rs3_box_bunshin_pat_v2.applyFormationBonus === "function" &&
+              typeof global.rs3_box_bunshin_pat_v2.isFrontSlot === "function") {
+            const isFront = global.rs3_box_bunshin_pat_v2.isFrontSlot(slot);
+            min = global.rs3_box_bunshin_pat_v2.applyFormationBonus(min, isFront);
+            max = global.rs3_box_bunshin_pat_v2.applyFormationBonus(max, isFront);
+          }
+
+          range = { min, max };
+        }
+
         slots.push({
-          min: Number(res && res.min) || 0,
-          max: Number(res && res.max) || 0
+          min: Number(range && range.min) || 0,
+          max: Number(range && range.max) || 0
         });
       }
 
