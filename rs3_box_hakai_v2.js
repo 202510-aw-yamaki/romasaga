@@ -313,6 +313,11 @@
       roles: rolesSnapshot,
       swordLevels: swordSnapshot
     };
+
+    // --- hakai_v2_js 形態推察・ログ 修正ここから
+    // 乱数幅テーブルが組めているか一度だけ確認できるようにログを残す
+    console.log("hakai_v2_js: built patternTable", hakaiState.patternTable, hakaiState.patternMeta);
+    // --- hakai_v2_js 形態推察・ログ 修正ここまで
   }
 
   // =========================================================
@@ -342,6 +347,11 @@
   // =========================================================
   // 7. 形態推察ロジック
   // =========================================================
+
+  // --- hakai_v2_js 形態推察・ログ 修正ここから
+  // formation-slot(①〜⑤) → roleId(A〜E) → sword input → patternTable → 推察結果
+  // の流れで分身剣の乱数幅を把握し、入力ダメージから現在形態を推察する。
+  // --- hakai_v2_js 形態推察・ログ 修正ここまで
 
   function ensurePatternTableUpToDate() {
     const currentRoles = [];
@@ -404,6 +414,8 @@
       form: hakaiState.currentForm,
       candidateForms: [],
       nonZeroSlots: [],
+      perSlotMatches: [],
+      intersectionForms: [],
       table
     };
 
@@ -426,37 +438,61 @@
       return result;
     }
 
-    HAKAI_PATTERNS.forEach(pat => {
-      const formSymbol = pat.symbol;
-      const slots = table[formSymbol];
-      if (!slots || slots.length < 5) return;
-
-      let ok = true;
-      for (const nz of result.nonZeroSlots) {
-        const idx = nz.slot - 1; // 0-based
-        const range = slots[idx];
-        if (!range) {
-          ok = false;
-          break;
-        }
-        const dmg = nz.value;
-        if (dmg < range.min || dmg > range.max) {
-          ok = false;
-          break;
-        }
-      }
-
-      if (ok) result.candidateForms.push(formSymbol);
+    // まずスロット単位でのマッチ結果を集計
+    result.nonZeroSlots.forEach(nz => {
+      const analysis = analyzeSlotDamage(nz.slot, nz.value, table);
+      result.perSlotMatches.push({
+        slot: nz.slot,
+        value: nz.value,
+        matchedForms: analysis.matchedForms,
+        ranges: analysis.ranges
+      });
     });
 
-    if (result.candidateForms.length === 1) {
-      result.form = result.candidateForms[0];
-    } else {
-      console.warn("hakai_v2_js: expected exactly 1 candidate form", {
-        nonZeroSlots: result.nonZeroSlots,
-        candidateForms: result.candidateForms
-      });
+    // A: 全スロット共通の形態（積集合）を優先
+    if (result.perSlotMatches.length > 0) {
+      let common = result.perSlotMatches[0].matchedForms.slice();
+      for (let i = 1; i < result.perSlotMatches.length; i++) {
+        const next = result.perSlotMatches[i].matchedForms;
+        common = common.filter(f => next.indexOf(f) !== -1);
+      }
+      result.intersectionForms = common;
+      if (common.length === 1) {
+        result.form = common[0];
+        result.candidateForms = common.slice();
+        return result;
+      }
     }
+
+    // B: 共通形態がない場合、どこか1スロットだけ一意ならそれを採用
+    const uniqueSlot = result.perSlotMatches.find(m => m.matchedForms.length === 1);
+    if (uniqueSlot) {
+      result.form = uniqueSlot.matchedForms[0];
+      result.candidateForms = uniqueSlot.matchedForms.slice();
+
+      // 他スロットで矛盾がある場合は警告に残す
+      const conflictingSlots = result.perSlotMatches.filter(m => {
+        if (m === uniqueSlot) return false;
+        if (m.matchedForms.length === 0) return true;
+        return m.matchedForms.indexOf(result.form) === -1;
+      });
+      if (conflictingSlots.length > 0) {
+        console.warn("hakai_v2_js: unique slot decided form but other slots conflicted", {
+          decidedBy: uniqueSlot,
+          conflictingSlots
+        });
+      }
+
+      return result;
+    }
+
+    // C: それでも決まらない場合は現状維持＋詳細ログ
+    console.warn("hakai_v2_js: form estimation not decisive", {
+      nonZeroSlots: result.nonZeroSlots,
+      perSlotMatches: result.perSlotMatches,
+      intersectionForms: result.intersectionForms,
+      patternTableSnippet: table
+    });
 
     return result;
   }
@@ -908,6 +944,47 @@
       history: hakaiState.history.slice()
     };
   };
+
+  // --- hakai_v2_js 形態推察・ログ 修正ここから
+  // テスト用：任意の patternTable とダメージ入力を与えて形態推察を実行する
+  global.rs3_box_hakai_v2._testEstimate = function (patternTable, damageMap) {
+    const prevTable = hakaiState.patternTable;
+    const prevMeta = hakaiState.patternMeta;
+    const prevForm = hakaiState.currentForm;
+
+    hakaiState.patternTable = patternTable;
+    hakaiState.patternMeta = {
+      roles: [null, null, null, null, null],
+      swordLevels: [0, 0, 0, 0, 0]
+    };
+    hakaiState.currentForm = "①";
+
+    const map = damageMap || {};
+    const stubInputs = {};
+    for (let i = 1; i <= 5; i++) {
+      const key = `dmg-${i}`;
+      const v = map[i];
+      stubInputs[key] = { value: (v != null ? String(v) : "") };
+    }
+
+    const originalGetElementById = document.getElementById.bind(document);
+    document.getElementById = function (id) {
+      if (Object.prototype.hasOwnProperty.call(stubInputs, id)) {
+        return stubInputs[id];
+      }
+      return originalGetElementById(id);
+    };
+
+    try {
+      return computeFormEstimation();
+    } finally {
+      document.getElementById = originalGetElementById;
+      hakaiState.patternTable = prevTable;
+      hakaiState.patternMeta = prevMeta;
+      hakaiState.currentForm = prevForm;
+    }
+  };
+  // --- hakai_v2_js 形態推察・ログ 修正ここまで
   global.rs3_box_hakai_v2.init = function () {
     ensureInitialized();
   };
