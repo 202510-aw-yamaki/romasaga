@@ -144,4 +144,4 @@
     calcDamage: calcBunshinkenDamage
   };
 
-})(this);
+})(typeof window !== "undefined" ? window : this);
