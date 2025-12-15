@@ -171,9 +171,9 @@
     currentForm: "①", // 現在形態（初期値①）
     darkMode: false,   // 闇突入フラグ
     patternTable: null, // 形態①〜④ × スロット1〜5 の {min, max} テーブル
-    // --- 修正ここから
+    // --- hakai_v2_js 形態推察・ログ ここから
     patternMeta: null  // 乱数幅テーブル生成時のロールID／剣レベルスナップショット
-    // --- 修正ここまで
+    // --- hakai_v2_js 形態推察・ログ ここまで
   };
 
 
@@ -241,7 +241,7 @@
     return clampSwordLevel(input.value);
   }
 
-  // --- 修正ここから
+  // --- hakai_v2_js 形態推察・ログ ここから
   function getFormationRoleForSlot(slotIndex) {
     if (global.rs3_rta_v2_bunshin_link &&
         typeof global.rs3_rta_v2_bunshin_link.getFormationState === "function") {
@@ -254,7 +254,6 @@
     const roleId = sel.value;
     return roleId || null;
   }
-  // --- 修正ここまで
 
   // =========================================================
   // 5. 形態①〜④ × スロット1〜5 の乱数幅テーブルを構築
@@ -264,17 +263,13 @@
     if (!window.bunshin_sword_99 || typeof window.bunshin_sword_99.calcDamage !== "function") {
       // 分身剣計算ロジックが未読み込みの場合は何もしない
       hakaiState.patternTable = null;
-      // --- 修正ここから
       hakaiState.patternMeta = null;
-      // --- 修正ここまで
       return;
     }
 
     const table = {}; // { "①": [ {min,max}, ...slot5 ], ... }
-    // --- 修正ここから
     const rolesSnapshot = [];
     const swordSnapshot = [];
-    // --- 修正ここまで
 
     // 形態①〜④
     HAKAI_PATTERNS.forEach(pat => {
@@ -287,12 +282,10 @@
         // （ダメージスロットとの紐付けを確実にするため）
         const roleId = getFormationRoleForSlot(slot);
         const swordLv = getSwordLevelForSlot(slot);
-        // --- 修正ここから
         if (rolesSnapshot.length < slot) {
           rolesSnapshot.push(roleId);
           swordSnapshot.push(swordLv);
         }
-        // --- 修正ここまで
 
         const lv = Math.max(0, Math.min(50, Number(swordLv) || 0));
 
@@ -316,12 +309,10 @@
     });
 
     hakaiState.patternTable = table;
-    // --- 修正ここから
     hakaiState.patternMeta = {
       roles: rolesSnapshot,
       swordLevels: swordSnapshot
     };
-    // --- 修正ここまで
   }
 
   // =========================================================
@@ -352,7 +343,6 @@
   // 7. 形態推察ロジック
   // =========================================================
 
-  // --- 修正ここから
   function ensurePatternTableUpToDate() {
     const currentRoles = [];
     const currentSwords = [];
@@ -382,7 +372,6 @@
       rebuildPatternDamageTable();
     }
   }
-  // --- 修正ここまで
 
   /**
    * 現在ターン中に入力されているダメージ（非0）と patternTable を使って
@@ -390,18 +379,38 @@
    * - 乱数幅の重複がない前提なので、一致する形態は高々1つ。
    * - 一致なしの場合は、直前の currentForm を維持する。
    */
-  function estimateFormFromInputs() {
-    // --- 修正ここから
+  function analyzeSlotDamage(slotIndex, damageValue, table) {
+    const ranges = {};
+    const matchedForms = [];
+
+    HAKAI_PATTERNS.forEach(pat => {
+      const slotRanges = table && table[pat.symbol];
+      const range = slotRanges && slotRanges[slotIndex - 1];
+      if (range) {
+        ranges[pat.symbol] = { min: range.min, max: range.max };
+        if (damageValue >= range.min && damageValue <= range.max) {
+          matchedForms.push(pat.symbol);
+        }
+      }
+    });
+
+    return { ranges, matchedForms };
+  }
+
+  function computeFormEstimation() {
     ensurePatternTableUpToDate();
-    // --- 修正ここまで
     const table = hakaiState.patternTable;
+    const result = {
+      form: hakaiState.currentForm,
+      candidateForms: [],
+      nonZeroSlots: [],
+      table
+    };
+
     if (!table) {
-      // 乱数幅未計算なら現行形態を維持
-      return hakaiState.currentForm;
+      return result;
     }
 
-    // スロット1〜5の非0ダメージを取得
-    const nonZeroSlots = [];
     for (let slot = 1; slot <= 5; slot++) {
       const input = el(`dmg-${slot}`);
       if (!input) continue;
@@ -410,16 +419,12 @@
       const v = Number(raw);
       if (!Number.isFinite(v)) continue;
       if (v === 0) continue; // 0は推察に使わない
-      nonZeroSlots.push({ slot, value: v });
+      result.nonZeroSlots.push({ slot, value: v });
     }
 
-    if (nonZeroSlots.length === 0) {
-      // 推察に使える値がない場合は現行形態のまま
-      return hakaiState.currentForm;
+    if (result.nonZeroSlots.length === 0) {
+      return result;
     }
-
-    // 形態①〜④のどれが「すべての非0ダメージに対して min〜max を満たすか」をチェック
-    const candidateForms = [];
 
     HAKAI_PATTERNS.forEach(pat => {
       const formSymbol = pat.symbol;
@@ -427,7 +432,7 @@
       if (!slots || slots.length < 5) return;
 
       let ok = true;
-      for (const nz of nonZeroSlots) {
+      for (const nz of result.nonZeroSlots) {
         const idx = nz.slot - 1; // 0-based
         const range = slots[idx];
         if (!range) {
@@ -441,27 +446,128 @@
         }
       }
 
-      if (ok) candidateForms.push(formSymbol);
+      if (ok) result.candidateForms.push(formSymbol);
     });
 
-    if (candidateForms.length === 1) {
-      return candidateForms[0];
+    if (result.candidateForms.length === 1) {
+      result.form = result.candidateForms[0];
+    } else {
+      console.warn("hakai_v2_js: expected exactly 1 candidate form", {
+        nonZeroSlots: result.nonZeroSlots,
+        candidateForms: result.candidateForms
+      });
     }
 
-    // 0個 or 複数候補の場合は、いったん現行形態を維持
-    return hakaiState.currentForm;
+    return result;
+  }
+
+  function estimateFormFromInputs() {
+    const estimation = computeFormEstimation();
+    return estimation.form;
   }
 
   /**
    * ダメージ入力（非0）が入ったタイミングで現在形態を更新する。
    * - ただし闇モード中は変化させない。
    */
-  function updateCurrentFormFromInputs() {
+  function updateCurrentFormFromInputs(estimationResult) {
     if (hakaiState.darkMode) return;
-    const newForm = estimateFormFromInputs();
-    hakaiState.currentForm = newForm;
+    const estimation = estimationResult || computeFormEstimation();
+    hakaiState.currentForm = estimation.form;
     updateFormDisplays();
   }
+
+  function logDamageInference(slotIndex, damageValue, estimationResult) {
+    const estimation = estimationResult || computeFormEstimation();
+    const table = estimation.table || hakaiState.patternTable;
+    const roleId = (hakaiState.patternMeta && hakaiState.patternMeta.roles && hakaiState.patternMeta.roles[slotIndex - 1])
+      || getFormationRoleForSlot(slotIndex);
+    const swordLevel = (hakaiState.patternMeta && hakaiState.patternMeta.swordLevels && hakaiState.patternMeta.swordLevels[slotIndex - 1])
+      || getSwordLevelForSlot(slotIndex);
+    const slotAnalysis = analyzeSlotDamage(slotIndex, damageValue, table);
+
+    if (damageValue > 0 && slotAnalysis.matchedForms.length !== 1) {
+      console.warn("hakai_v2_js: expected exactly 1 form match for slot", {
+        slotIndex,
+        damageValue,
+        matchedForms: slotAnalysis.matchedForms
+      });
+    }
+
+    const reason = (function () {
+      if (slotAnalysis.matchedForms.length === 1) {
+        return `matched ${slotAnalysis.matchedForms[0]} for slot ${slotIndex}`;
+      }
+      if (slotAnalysis.matchedForms.length === 0) {
+        return "no form matched this damage value";
+      }
+      return `multiple forms matched this damage value: ${slotAnalysis.matchedForms.join(',')}`;
+    })();
+
+    console.log({
+      damageSlotIndex: slotIndex,
+      formationSlotIndex: slotIndex,
+      partyId: roleId,
+      swordLevel: swordLevel,
+      inputDamage: damageValue,
+      usedTableKey: `lv${swordLevel}`,
+      candidateRanges: slotAnalysis.ranges,
+      matchedFormsForSlot: slotAnalysis.matchedForms,
+      overallCandidates: estimation.candidateForms,
+      matchedForm: estimation.form,
+      matchReason: reason
+    });
+  }
+
+  function handleDamageInputChange(slotIndex) {
+    const input = el(`dmg-${slotIndex}`);
+    if (!input) return;
+
+    const raw = input.value.trim();
+    const dmg = Number(raw);
+
+    // HP減算を先に適用
+    applyDamage(slotIndex);
+
+    // 形態推察（最新の乱数テーブルで実施）
+    const estimation = computeFormEstimation();
+
+    if (raw !== "" && Number.isFinite(dmg)) {
+      logDamageInference(slotIndex, dmg, estimation);
+    }
+
+    updateCurrentFormFromInputs(estimation);
+  }
+
+  function handlePartyDataChange() {
+    rebuildPatternDamageTable();
+    const estimation = computeFormEstimation();
+    updateCurrentFormFromInputs(estimation);
+  }
+
+  function attachPartyDataChangeHandlers() {
+    for (let slot = 1; slot <= 5; slot++) {
+      const sel = el(`formation-slot-${slot}`);
+      if (sel) {
+        sel.addEventListener("change", handlePartyDataChange);
+      }
+    }
+
+    ["sword-main", "sword-ally1", "sword-ally2", "sword-ally3", "sword-ally4"].forEach(id => {
+      const input = el(id);
+      if (input) {
+        input.addEventListener("change", handlePartyDataChange);
+      }
+    });
+
+    ["char-main", "char-ally1", "char-ally2", "char-ally3", "char-ally4"].forEach(id => {
+      const sel = el(id);
+      if (sel) {
+        sel.addEventListener("change", handlePartyDataChange);
+      }
+    });
+  }
+  // --- hakai_v2_js 形態推察・ログ ここまで
 
   // =========================================================
   // 8. HP・ターン・各種ボタン挙動
@@ -682,11 +788,7 @@
       if (!inp) continue;
 
       inp.addEventListener("change", function () {
-        // HP減算
-        applyDamage(slot);
-        // 形態推察＆現在形態表示（非0がある限り判定可能）
-        updateCurrentFormFromInputs();
-
+        handleDamageInputChange(slot);
       });
       inp.addEventListener("keydown", function (e) {
         if (e.key === "Enter") {
@@ -754,6 +856,9 @@
         resetAll();
       });
     }
+
+    // 陣形・キャラ・剣レベル変更時の再計算
+    attachPartyDataChangeHandlers();
 
     // 初期表示
     updateHpDisplay();
