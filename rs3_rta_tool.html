@@ -1,0 +1,5937 @@
+﻿<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>RTA本体レイアウト（v2起動・統合版）</title>
+
+  <!-- 本体レイアウトCSS -->
+  <style>
+/* rs3_rta_v2_kidou.css
+   RTA本体レイアウト用（468×468 / 3スロット＋左分割）
+*/
+
+/* リセット */
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont,
+               "Yu Gothic", "メイリオ", sans-serif;
+  font-size: 12px;
+}
+
+/* 画面全体ルート 468×468 */
+#rta-v2-root {
+  width: 468px;
+  height: 468px;
+  box-sizing: border-box;
+  border: 1px solid #444;
+  display: flex;
+  flex-direction: column;
+  background-color: #ffffff;
+}
+
+/* 上段+下段の構成
+   上段：高さ 360px（左300/右168）
+   下段：高さ 108px（幅468）
+*/
+.rta-v2-top-row {
+  width: 100%;
+  height: 360px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: row;
+}
+
+/* 左上 300px 幅（メイン＋サブ縦分割） */
+.rta-v2-top-left {
+  width: 300px;
+  height: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 右上 168×360 */
+#rta-v2-top-right {
+  width: 168px;
+  height: 360px;
+  box-sizing: border-box;
+  border-left: 1px solid #444;
+}
+
+/* 左上メイン 300×255 */
+#rta-v2-top-lm {
+  width: 300px;
+  height: 255px;
+  box-sizing: border-box;
+}
+
+/* 左上サブ 300×105 */
+#rta-v2-top-ls {
+  width: 300px;
+  height: 105px;
+  box-sizing: border-box;
+}
+
+/* 下段 468×108 */
+#rta-v2-bottom {
+  width: 468px;
+  height: 108px;
+  box-sizing: border-box;
+}
+
+/* デバッグ表示用の枠とラベル（後で不要になれば削除可） */
+.rta-v2-slot-box {
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  border: 1px solid #888;
+  padding: 2px;
+  position: relative;
+}
+
+.rta-v2-slot-label {
+  font-size: 11px;
+  font-weight: bold;
+  padding: 0 2px;
+  background-color: #f0f0ff;
+  display: inline-block;
+  margin-bottom: 2px;
+}
+
+/* スロット内のダミーコンテンツ */
+.rta-v2-slot-dummy {
+  font-size: 11px;
+  color: #555;
+}
+
+/* --- HP状態による表示切替 -------------------------
+   layout-hp-normal : HP>0（通常モード）
+   layout-hp-zero   : HP<=0（HP0モード） */
+
+/* 共通：中身コンテナは基本非表示にしておき、状態ごとにONにする */
+.rta-v2-inner-block {
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  display: none;
+}
+
+/* --- HP>0 のときの表示 ------------------------ */
+
+/* 左上メインは常に「キャラ＋お供レベル」 */
+.layout-hp-normal #rta-v2-top-lm .block-char-otomo {
+  display: block;
+}
+
+/* 左上サブ：SPARK BLOCK（分身剣閃き） */
+.layout-hp-normal #rta-v2-top-ls .block-spark {
+  display: block;
+}
+
+/* 右上：TECH LIST */
+.layout-hp-normal #rta-v2-top-right .block-techlist {
+  display: block;
+}
+
+/* 下段：フォル＆ビュネHP */
+.layout-hp-normal #rta-v2-bottom .block-fb-hp {
+  display: block;
+}
+
+/* --- HP<=0 のときの表示 ----------------------- */
+
+.layout-hp-zero #rta-v2-top-lm .block-char-otomo {
+  display: block;
+}
+
+/* 左上サブ：FORMATION BLOCK（陣形スロット） */
+.layout-hp-zero #rta-v2-top-ls .block-formation {
+  display: block;
+}
+
+/* 右上：分身ダメージ＋形態X */
+.layout-hp-zero #rta-v2-top-right .block-bunshin-pat {
+  display: block;
+}
+
+/* 下段：破壊ツール下段（分身ダメージ入力＋パターン推察） */
+.layout-hp-zero #rta-v2-bottom .block-hakai-bottom {
+  display: block;
+}
+  </style>
+
+  <!-- ミニブロックCSS -->
+  <style>
+/* キャラスロット＋お供レベル制御ブロック（300×255） */
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont,
+               "Yu Gothic", "メイリオ", sans-serif;
+  font-size: 14px;
+}
+
+/* 左上メインスロット用コンテナ */
+#rta-v2-top-lm {
+  width: 300px;
+  height: 254.5px;
+  box-sizing: border-box; 
+  /* v2本体側で枠線を管理するのでここでは付けない */
+  /* border: 1px solid #444; */
+  padding: 0;
+  display: flex;
+  align-items: stretch;
+  justify-content: stretch;
+}
+
+/* キャラスロットテーブル全体 */
+.rta-v2-char-table {
+  width: 100%;
+  height: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+/* 表全体の枠線（外枠＋内枠） */
+.rta-v2-char-table,
+.rta-v2-char-table th,
+.rta-v2-char-table td {
+  border: 1px solid #444;
+  box-sizing: border-box;
+}
+
+/* ヘッダ行：高さ24px、背景色はお供ヘッダと同色 */
+.rta-v2-char-table thead th {
+  height: 24px;
+  padding: 0 2px;
+  font-weight: bold;
+  font-size: 14px;
+  text-align: center;
+  white-space: nowrap;
+  background-color: #eef3ff;
+}
+
+/* 列幅：138 + 82 + 80 = 300 */
+.rta-v2-char-table .col-role {
+  width: 138px;
+}
+
+.rta-v2-char-table .col-a{
+  width: 82px;
+}
+.rta-v2-char-table .col-b {
+  width: 80px;
+}
+
+/* 本文行（7行×33px = 231px） */
+.rta-v2-char-table tbody td {
+  height: 33px;
+  padding: 0 2px;
+  vertical-align: middle;
+  box-sizing: border-box;
+}
+
+/* 役割＋キャラ選択セル */
+.char-name-cell {
+  padding: 0 2px;
+  text-align: center;          /* セル全体としては中央寄せ */
+}
+
+.char-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;     /* ラベル＋セレクトをセル中央に寄せる */
+  gap: 1px;
+}
+
+.char-role-label {
+  display: inline-block;
+  min-width: 24px;
+  margin-right: 0;
+}
+
+/* セレクトボックス（キャラ名／お供） */
+.char-select {
+  font-size: 12px;
+  padding: 1px 2px;
+  box-sizing: border-box;
+  width: 90px;                 /* 138px のセル内で折り返さない程度に抑える */
+}
+/* 主＋仲キャラのセレクトボックスは 74px にする */
+.rta-v2-char-row-main .char-select {
+  width: 80px;
+}
+
+/* 数値入力＋スピンボタン横並び */
+.spin-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end; /* 右寄せでセル内に収める */
+  gap: 1px;
+}
+
+/* 数値入力（剣レベル／JP／お供HP） */
+.num-input {
+  width: 40px; /* セル幅80pxに収まるよう縮小 */
+  box-sizing: border-box;
+  padding: 1px 2px;
+  font-size: 12px;
+  text-align: center;
+  -moz-appearance: textfield;   /* ★ Firefoxの内蔵スピンを消す */
+}
+
+/* スピンボタン（▲▼） */
+.spin-btn {
+  font-size: 10px;
+  padding: 1px 2px;
+  min-width: 14px;
+  box-sizing: border-box;
+}
+
+/* お供ヘッダ行 */
+.rta-v2-char-row-otomo-header td {
+  font-size: 11px;
+  font-weight: bold;
+  background-color: #eef3ff;
+}
+
+.otomo-header-cell {
+  text-align: center;
+}
+
+.support-hp-header {
+  text-align: center;
+}
+
+.support-reset-header {
+  text-align: center;
+}
+
+/* お供リセットボタン */
+.support-reset-btn {
+  font-size: 11px;
+  padding: 2px 6px;
+  box-sizing: border-box;
+}
+
+/* お供LV表示まわり */
+.support-lv-label {
+  margin-right: 2px;
+  font-size: 11px;
+}
+
+#support-lv {
+  display: inline-block;
+  min-width: 20px;
+  text-align: right;
+}
+
+/* 行種別：主＋仲はすべて同じ背景色に統一 */
+.rta-v2-char-row-main td {
+  background-color: #ffffff;
+}
+
+/* お供行の背景色 */
+.rta-v2-char-row-otomo td {
+  background-color: #f5f8ff;
+}
+
+/* Chrome / Edge / Safari：数値入力の内蔵スピンを消す */
+.num-input::-webkit-outer-spin-button,
+.num-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* キャラ名の前に表示する「アイコン置き場」 */
+.crown-icon {
+  display: inline-block;
+  width: 25px;     /* アイコンの表示枠（横） */
+  height: 25px;    /* アイコンの表示枠（縦） */
+  box-sizing: content-box;
+
+  /* 後から background-image を差し替える前提 */
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 25px 25px;
+
+  /* レイアウト時に縮ませない */
+  flex-shrink: 0;
+}
+
+.crown-icon {
+  display: inline-block;
+  width: 25px;
+  height: 25px;
+  vertical-align: middle;
+  margin-right: 2px;
+  /* ここでは背景画像は指定しない */
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center center;
+  box-sizing: border-box;
+}
+
+/* 分身剣「適正なし」アイコン */
+.crown-icon.icon-nolight {
+  background-image: url("rs3rtagazou/nolight.png");
+}
+
+/* 分身剣「王冠あり」アイコン */
+.crown-icon.icon-crown {
+  background-image: url("rs3rtagazou/oukan.png");
+}
+
+/* 「何もなし」用。25×25の空枠だけにしたい場合 */
+.crown-icon.icon-empty {
+  background-image: none;
+}
+
+  </style>
+  <style>
+/* 分身剣閃きブロック（SPARK BLOCK）300×105 */
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont,
+               "Yu Gothic", "メイリオ", sans-serif;
+  font-size: 12px;
+}
+
+/* 左上サブスロット用コンテナ */
+#rta-v2-top-ls {
+  width: 300px;
+  height: 105px;
+  box-sizing: border-box;
+  /* v2本体側で枠線を管理するのでここでは付けない */
+  /* border: 1px solid #444; */
+  padding: 0;
+  display: flex;
+  align-items: stretch;
+  justify-content: stretch;
+}
+
+/* 外枠テーブル（全体300×105のうち、タイトル行+本体行） */
+.spark-outer {
+  width: 300px;
+  height: 105px;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+/* 枠線：外枠＋内枠ともに同じ色で統一 */
+.spark-outer,
+.spark-outer th,
+.spark-outer td {
+  border: 0.5px solid #444;
+  box-sizing: border-box; }
+
+
+/* タイトル行（約25px想定） */
+.spark-title {
+  height: 25px;
+  padding: 0 0px;
+  font-size: 12px;
+  font-weight: bold;
+  text-align: center;
+  background-color: #eef3ff;
+}
+
+/* 本体セル：内部テーブルを1つ持つ */
+.spark-container-cell {
+  padding: 0;
+}
+
+/* 内部テーブル（フォル／ビュネ行） */
+.spark-inner {
+  width: 300px;
+  table-layout: fixed;
+  border-collapse: collapse;
+  border: none;
+  outline: none!important;
+}
+
+/* 内部テーブルのセル共通 */
+.spark-inner td {
+  padding: 0 2px;
+  vertical-align: middle;
+  box-sizing: border-box;
+}
+
+/* 列幅指定：72 + 145 + 82 */
+.spark-inner tr td:nth-child(1) {
+  width: 72px;   /* 対フォル／対ビュネ */
+}
+
+.spark-inner tr td:nth-child(2) {
+  width: 145px;  /* 閃き回数＋スピンボタン */
+}
+
+.spark-inner tr td:nth-child(3) {
+  width: 82px;   /* 王冠ラベル＋％ */
+}
+
+/* ラベル列（対フォル／対ビュネ） */
+.spark-label {
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* 閃き回数列・確率列テキスト */
+.spark-row {
+  font-size: 11px;
+  white-space: nowrap; /* 折り返し防止 */
+}
+
+/* 閃き回数＋スピンボックス */
+.spin-box {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 2px;
+  margin-left: 4px;
+}
+
+/* 数値入力（閃き回数） */
+.num-input.spark-count-input {
+  width: 40px;
+  box-sizing: border-box;
+  padding: 1px 2px;
+  font-size: 12px;
+  text-align: center;
+  -moz-appearance: textfield;  /* Firefox用：標準スピンを消す */
+}
+
+/* スピンボタン（▲▼ 横並び） */
+.spin-buttons {
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+}
+
+.spin-btn {
+  font-size: 10px;
+  padding: 1px 2px;
+  min-width: 14px;
+  box-sizing: border-box;
+}
+
+/* 王冠ラベル＋確率表示 */
+.spark-crown-label {
+  margin-right: 4px;
+  font-size: 11px;
+}
+
+.spark-rate {
+  font-size: 11px;
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+/* 行の高さ指定 */
+/* 対フォル（上段＋下段）合計50px → 各25pxずつ */
+.spark-inner tbody tr:nth-child(1) td,
+.spark-inner tbody tr:nth-child(2) td {
+  height: 25px;
+}
+
+/* 対ビュネ行を27pxに */
+.spark-inner tbody tr:nth-child(3) td {
+  height: 27.5px;
+}
+
+/* Chrome / Edge / Safari：閃き回数入力の内蔵スピンを消す */
+.spark-count-input::-webkit-outer-spin-button,
+.spark-count-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+  </style>
+  <style>
+/* 陣形スロットブロック（FORMATION BLOCK）300×105 */
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont,
+               "Yu Gothic", "メイリオ", sans-serif;
+  font-size: 12px;
+}
+
+/* 左上サブスロット用コンテナ */
+#rta-v2-top-ls {
+  width: 300px;
+  height: 105px;
+  box-sizing: border-box;
+  padding: 0;
+  display: flex;
+  align-items: stretch;
+  justify-content: stretch;
+}
+
+/* 陣形ブロック全体 */
+.formation-block {
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  border: 1px solid #444;
+  display: flex;
+  flex-direction: column;
+}
+
+/* タイトル行 */
+.formation-title {
+  height: 20px;
+  line-height: 20px;
+  padding: 0 4px;
+  font-size: 12px;
+  font-weight: bold;
+  text-align: center;
+  background-color: #eef3ff;
+  border-bottom: 1px solid #444;
+  box-sizing: border-box;
+}
+
+/* グリッド部（くの字配置用） */
+.formation-grid {
+  height: 84px;
+  display: grid;
+  /* 3列 × 15行のグリッドを用意してくの字に配置 */
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(15, 1fr);
+  padding: 0px;
+  box-sizing: border-box;
+}
+
+/* 各セル共通：ラベル＋セレクトを1行に並べる */
+.formation-cell {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: row;      /* 横並び */
+  align-items: center;
+  justify-content: center;  /* セルの中央に配置 */
+}
+
+/* ラベル（①〜⑤） */
+.formation-label {
+  display: inline-block;
+  font-size: 12px;
+  margin-right: 4px;
+  white-space: nowrap;
+}
+
+/* セレクトボックス（キャラ名） */
+.formation-select {
+  width: 78px;             /* くの字内で折り返さない程度 */
+  font-size: 12px;
+  padding: 1px 2px;
+  box-sizing: border-box;
+}
+
+/* --- くの字の位置指定 ---------------------- */
+/* グリッドは 3列×15行 として、
+   列1・列2・列3 を「左・中央・右」とみなす */
+
+/* ④：一番上・右端（列3・行1） */
+.formation-cell-4 {
+  grid-column: 3;
+  grid-row: 1 / span 5;
+}
+
+/* ②：上から2つ目・中央（列2・行2） */
+.formation-cell-2 {
+  grid-column: 2;
+  grid-row: 3 / span 5;
+}
+
+/* ①：中央・左端（列1・行3） */
+.formation-cell-1 {
+  grid-column: 1;
+  grid-row: 6 / span 5;
+}
+
+/* ③：下から2つ目・中央（列2・行4） */
+.formation-cell-3 {
+  grid-column: 2;
+  grid-row: 9 / span 5;
+}
+
+/* ⑤：一番下・右端（列3・行5） */
+.formation-cell-5 {
+  grid-column: 3;
+  grid-row: 11 / span 5;
+}
+  </style>
+  <style>
+/* 技チェックブロック（TECH LIST）160×360 */
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont,
+               "Yu Gothic", "メイリオ", sans-serif;
+  font-size: 12px;
+}
+
+/* 右上スロット用コンテナ
+   ※外枠は本体CSS側で管理するので border は付けない */
+#rta-v2-top-right {
+  width: 167.4px;
+  height: 360px;
+  box-sizing: border-box;
+  padding: 0;
+  display: flex;
+  align-items: stretch;
+  justify-content: stretch;
+}
+
+/* テーブル全体：スロットいっぱいに広げる */
+.tlist-table {
+  width: 167.4px;
+  height: 360px;
+  border-collapse: collapse;
+  table-layout: fixed;
+  box-sizing: border-box;
+  border: 1px solid #444;
+}
+
+/* ヘッダー行 */
+.tlist-table thead th {
+  height: 24px;
+  padding: 0;
+  font-size: 12px;
+  font-weight: bold;
+  text-align: center;
+  background-color: #eef3ff;
+  border: 1px solid #444;
+  box-sizing: border-box;
+}
+
+/* 列幅 */
+.col-name {
+  width: 100px;
+}
+
+.col-gokui{
+  width: 34px;
+}
+.col-main {
+  width: 34px;
+}
+
+/* 本文行：12行 × 28px = 336px を想定（24 + 336 = 360） */
+.tlist-table tbody td {
+  text-align: center;
+  height: 28px;
+  padding: 0;
+  font-size: 12px;
+  border: 1px solid #444;
+  box-sizing: border-box;
+}
+
+/* 技名セル */
+.tech-name-cell {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* チェックセル共通 */
+.tech-check-cell {
+  text-align: center;
+}
+
+/* チェックボックス */
+.chk-gokui,
+.chk-main {
+  margin: 0;
+  padding: 0;
+}
+  </style>
+  <style>
+/* 分身剣想定ダメージ＋形態X ブロック用 CSS （右上 160×360 専用）
+   対象HTML: rs3_box_bunshin_pat_v2.html
+   ・上部 168×260 : 分身剣想定ダメージ一覧（5スロット）
+   ・下部 168× 80 : 破壊するものの形態選択エリア
+*/
+
+/* --------------------------------
+   HTML全体の基本設定
+   （単体プレビュー用。親画面側CSSより後に読み込まれる想定はない）
+---------------------------------- */
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont,
+               "Yu Gothic", "メイリオ", sans-serif;
+  font-size: 12px;
+  color: #000;
+}
+
+/* --------------------------------
+   右上スロットのルートコンテナ
+   ・単体表示時にも 160×360 を維持するための枠
+---------------------------------- */
+
+#rta-v2-top-right {
+  width: 168px;
+  height: 360px;
+  box-sizing: border-box;
+}
+
+/* 全体ボックス（分身DMG＋形態X全体） */
+.bunshinpat-box {
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  border: 1px solid #666;
+  background-color: #fdfdfd;
+  display: flex;
+  flex-direction: column;
+}
+
+/* --------------------------------
+   上部：分身剣想定ダメージエリア（おおよそ 168×260）
+---------------------------------- */
+
+.bunshin-dmg-area {
+  /* 下部の形態エリアを 80px と想定し、それ以外を上部として扱う */
+  height: calc(100% - 90px);
+  box-sizing: border-box;
+  padding: 2px;
+  display: flex;
+  flex-direction: column;
+  row-gap: 2px;
+}
+
+/* 見出し「分身剣想定ダメージ」 */
+.bunshin-title {
+  height: 18px;
+  line-height: 18px;
+  font-size: 11px;
+  font-weight: bold;
+  text-align: center;
+  background-color: #eef3ff;
+  border: 1px solid #bbb;
+  box-sizing: border-box;
+}
+
+/* エントリー全体（①〜⑤キャラごとの帯） */
+.bunshin-entry {
+  box-sizing: border-box;
+  border: 1px solid #ccc;
+  padding: 2px;
+  margin-top: 2px;
+}
+
+/* エントリー内の1行（「キャラ＋最大」「剣レベル＋最小」など） */
+.bunshin-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  column-gap: 2px;
+  margin-top: 1px;
+}
+
+/* 左端のスロットラベル（①キャラ／剣レベ…） */
+.bunshinpat-box .slot-label {
+  flex: 0 0 60px;
+  font-size: 12px;
+  box-sizing: border-box;
+}
+
+/* 「最大」「最小」のラベル */
+.bunshinpat-box .dmg-label {
+  flex: 0 0 28px;
+  font-size: 12px;
+  text-align: center;
+}
+
+/* ダメージ入力欄（最大／最小共通） */
+.bunshinpat-box .dmg-input {
+  flex: 1 1 Auto;
+  box-sizing: border-box;
+  width: 60px;
+  height: 18px;
+  padding: 0 2px;
+  font-size: 12px;
+  text-align: right;
+}
+
+/* 剣レベル表示（「剣レベ XX」中の XX 部分） */
+.sword-lv {
+  font-weight: bold;
+  margin-left: 2px;
+}
+
+/* --------------------------------
+   下部：破壊するものの形態エリア（約 168×80）
+   ・中央の四角を左右より大きく
+   ・左右はサブ表示（灰色）、中央はメイン表示（黒）
+---------------------------------- */
+
+.patternx-area {
+  height: 96px;
+  box-sizing: border-box;
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 「破壊するものの形態」タイトル */
+.patternx-title {
+  height: 18px;
+  line-height: 18px;
+  font-size: 11px;
+  font-weight: bold;
+  text-align: center;
+  margin: 0 0 4px 0;
+  background-color: #eef3ff;
+  border: 1px solid #bbb;
+  box-sizing: border-box;
+}
+
+/* 行全体のベース（必要に応じて再利用可能） */
+.patternx-row {
+  display: flex;
+  align-items: center;
+}
+
+/* 選択UI本体（[左表示][←][中央][→][右表示] の1行） */
+.patternx-selector {
+  flex: 1;
+  justify-content: space-between;
+  column-gap: 2px;
+}
+
+/* 獣魔形態 HP 表示行 */
+.patternx-hp-row {
+  margin-top: 4px;           /* 形態選択行との間に少し余白 */
+  justify-content: center;   /* 中央寄せ */
+  column-gap: 4px;           /* ラベルと数値の間隔 */
+  font-size: 12px;           /* ひとまわり小さめ */
+}
+
+/* 「獣魔形態HP」ラベル側 */
+.patternx-hp-label {
+  white-space: nowrap;       /* 改行しないように固定 */
+}
+
+/* HP数値側（後でJSから書き換える） */
+.patternx-hp-value {
+  min-width: 64px;           /* 桁数が変わってもガタつきにくくするための幅 */
+  text-align: right;         /* 数値は右寄せ */
+  font-weight: bold;
+  font-family: "ＭＳ ゴシック", "Consolas", monospace;
+}
+
+
+
+/* 左右・中央の共通ボックス枠 */
+.patternx-box {
+  box-sizing: border-box;
+  border: 1px solid #888;
+  background-color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+text-align: center;
+}
+
+/* 左右の小さいボックス（サブ表示用） */
+.patternx-box-sub {
+  width: 22px;
+  height: 40px;
+}
+
+/* 中央の大きいボックス（メイン表示用） */
+.patternx-box-main {
+  width: 40px;
+  height: 48px;
+}
+
+/* 矢印ボタン */
+.patternx-arrow {
+  width: 18px;
+  height: 22px;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  border: 1px solid #888;
+  background-color: #f5f5f5;
+  font-size: 10px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+/* ラベル共通（左右・中央） */
+.patternx-label-main,
+.patternx-label-sub {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1;
+}
+
+/* 中央：黒（選択中） */
+.patternx-label-main {
+  font-size: 20px;
+  font-weight: bold;
+  color: #000000;
+}
+
+/* 左右：灰色（前後の候補） */
+.patternx-label-sub {
+  color: #999999;
+}
+
+/* 形態定義リスト（内部データ用。画面には表示しない） */
+.patternx-def-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: none;
+}
+  </style>
+  <style>
+/* フォル＆ビュネ HP ブロック用 CSS 468×108 */
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont,
+               "Yu Gothic", "メイリオ", sans-serif;
+  font-size: 12px;
+}
+
+/* 下段スロット用コンテナ */
+#rta-v2-bottom {
+  width: 468px;
+  height: 108px;
+  box-sizing: border-box;
+  padding: 0;
+  display: flex;
+  align-items: stretch;
+  justify-content: stretch;
+}
+
+/* 全体（ボスHPエリア） */
+#boss-fb-area {
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+/* フォル＆ビュネを左右に並べる */
+.boss-wrapper {
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: row;
+  gap: 8px;                 /* 230 + 8 + 230 = 468 */
+}
+
+/* 個別ボックス：230×108 想定 */
+.boss-box {
+  width: 230px;
+  height: 100%;
+  box-sizing: border-box;
+  border: 1px solid #444;
+  padding: 2px 4px;
+  font-size: 12px;
+  background-color: #ffffff;
+  display: flex;
+  flex-direction: column;
+}
+
+/* タイトル行（フォル／ビュネ＋お供レベル） */
+.boss-title {
+  font-weight: bold;
+  margin: 0 0 2px 0;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.otomo-label {
+  font-size: 11px;
+  margin-left: 4px;
+}
+
+/* 行テキスト共通 */
+.boss-row-text {
+  font-size: 11px;
+  margin: 0 0 2px 0;
+  padding: 0;
+  display: flex;
+  align-items: center;
+}
+
+/* 最大HP 表示 */
+.boss-hp-static {
+  font-family: Consolas, "Courier New", monospace;
+  margin-left: 2px;
+  min-width: 50px;
+  text-align: right;
+}
+
+/* ボタン */
+.boss-btn {
+  font-size: 11px;
+  padding: 1px 4px;
+  margin-left: 4px;
+}
+
+/* 位置調整用のダミーボタン（見えないが 56×23 のスペースだけ確保） */
+.boss-btn-space {
+  visibility: hidden;      /* 見えないがレイアウト上は存在する */
+  display: inline-block;
+  box-sizing: border-box;
+  width: 56px;
+  height: 23px;
+  padding: 0;
+  border: none;
+}
+
+/* ダメージ入力欄 */
+.boss-dmg-input {
+  width: 90px;
+  box-sizing: border-box;
+  font-family: Consolas, "Courier New", monospace;
+  font-size: 11px;
+  text-align: right;
+  padding: 1px 2px;
+  margin-left: 2px;
+}
+
+/* 残りHP＋直前ダメージ行 */
+.boss-remaining {
+  font-size: 14px;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  align-items: center;
+}
+
+.boss-remaining-value {
+  font-family: Consolas, "Courier New", monospace;
+  font-weight: bold;
+  min-width: 60px;
+  text-align: right;
+  margin-left: 2px;
+}
+
+/* 「直前ダメージ」ラベル＆値 */
+.boss-last-damage-label {
+  font-size: 10px;
+  text-align: center;
+  margin-left: 4px;
+}
+
+.boss-last-damage-value {
+  font-family: Consolas, "Courier New", monospace;
+  min-width: 40px;
+  text-align: right;
+  margin-left: 2px;
+}
+  </style>
+  <style>
+/* 破壊ツール下段（分身ダメージ入力＋パターン推察）468×108 */
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont,
+               "Yu Gothic", "メイリオ", sans-serif;
+  font-size: 12px;
+}
+
+/* 下段スロット用コンテナ */
+#rta-v2-bottom {
+  width: 468px;
+  height: 108px;
+  box-sizing: border-box;
+  padding: 0;
+  display: flex;
+  align-items: stretch;
+  justify-content: stretch;
+}
+
+/* 全体：左 350 + 右 112 + gap 6 = 468 */
+.hakai-bottom-box {
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: row;
+  gap: 6px;
+}
+
+/* 左側：分身剣ダメージ入力（約 350×108） */
+.hakai-dmg-area {
+  width: 350px;
+  height: 100%;
+  box-sizing: border-box;
+  border: 1px solid #444;
+  padding: 2px 4px;
+  display: flex;
+  flex-direction: column;
+  background-color: #ffffff;
+}
+
+/* 見出し＋ボタン行（獣魔撃破／リターン） */
+.hakai-dmg-header {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;    /* ★ タイトル＋ボタンを左寄せで詰める */
+  margin-bottom: 2px;
+}
+
+.hakai-dmg-title {
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.hakai-dmg-header-buttons {
+  display: flex;
+  gap: 2px;                       /* ★ ボタン同士の間隔をやや狭く */
+  margin-left: 4px;               /* ★ タイトルとの間は少しだけ */
+}
+
+.hakai-header-btn {
+  font-size: 11px;
+  padding: 2px 6px;
+  box-sizing: border-box;
+}
+
+/* ダメージ入力グリッド ①〜⑤＋ターン数 */
+.dmg-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-rows: auto auto;
+  gap: 2px;
+  font-size: 11px;
+}
+
+.dmg-slot {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid #d0d0d0;
+  padding: 1px 3px;
+  box-sizing: border-box;
+  background: #ffffff;
+}
+
+
+.hakai-bottom-box .slot-label {
+  font-size: 11px;
+  font-weight: bold;
+  width: 14px;
+  text-align: center;
+}
+
+.hakai-bottom-box .dmg-input {
+  width: 72px;
+  text-align: right;
+  font-size: 11px;
+  padding: 1px 2px;
+  box-sizing: border-box;
+}
+
+/* ターン数表示セル */
+.turn-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #d0d0d0;
+  box-sizing: border-box;
+}
+
+.turn-count-value {
+  font-size: 12px;
+  font-weight: bold;
+}
+
+/* 下側：残りHP＋ターン終了＋リセット（左右に分離） */
+.hakai-bottom-row {
+  margin-top: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;   /* ★ 左グループと右端リセットで両端揃え */
+}
+
+/* 左側：残りHP＋ターン終了をまとめる */
+.hakai-bottom-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* HPパネル（1行表示） */
+.hp-panel {
+  border: 1px solid #a0a0a0;
+  padding: 2px 4px;
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  background-color: #ffffff;
+  font-size: 11px;
+}
+
+.hp-caption {
+  margin: 0 4px 0 0;
+}
+
+.hp-value {
+  font-size: 16px;
+  font-weight: bold;
+  text-align: right;
+  min-width: 70px;
+}
+
+/* 下段ボタン（ターン終了／リセット共通） */
+.hakai-bottom-btn {
+  font-size: 11px;
+  padding: 2px 6px;
+  box-sizing: border-box;
+}
+
+/* 右端リセット専用（今は見た目同じだが、将来の調整余地用） */
+.hakai-reset-right {
+  /* ここに右端だけの調整が必要なら追加 */
+}
+
+/* 右側：パターン推察エリア（約 112×108） */
+.hakai-pattern-area {
+  width: 112px;
+  height: 100%;
+  box-sizing: border-box;
+  border: 1px solid #444;
+  padding: 2px 2px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;   
+  background-color: #ffffff;
+}
+
+/* タイトル（高さは前回の指定どおり） */
+.hakai-pattern-title {
+  height: 14px;
+  line-height: 14px;
+  font-size: 12px;
+  font-weight: bold;
+  text-align: center;
+  background-color: #eef3ff;
+  border-bottom: 1px solid #ccc;
+  box-sizing: border-box;
+}
+
+/* テーブル本体 */
+.hakai-pattern-table {
+  width: 100%;
+  height: calc(100% - 14px);
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 11px;
+}
+
+.hakai-pattern-table,
+.hakai-pattern-table th,
+.hakai-pattern-table td {
+  border: 1px solid #444;
+  box-sizing: border-box;
+}
+
+.hakai-pattern-head {
+  text-align: center;
+  white-space: nowrap;
+  padding: 0;
+}
+
+/* パターン行 */
+.pat-label {
+  width: 28px;
+  text-align: center;
+}
+
+.pat-percent {
+  text-align: right;
+  padding: 0 2px;
+  font-family: Consolas, "Courier New", monospace;
+}
+
+/* 右側：現在形態表示ブロック＋8ターン履歴 ------------------------ */
+
+/* 上段：現在形態表示 */
+.pattern-current-box {
+  height: 20px;
+  box-sizing: border-box;
+  border: 1px solid #444;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  background-color: #eef3ff;
+}
+
+.pattern-current-label {
+  font-size: 11px;
+}
+
+.pattern-current-value {
+  font-size: 13px;
+  font-weight: bold;
+}
+
+/* 下段：8ターン履歴テーブル（4行×4列） */
+.pattern-history-table {
+  width: 100%;
+  flex: 1;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 11px;
+}
+
+.pattern-history-table td {
+  border: 1px solid #444;
+  box-sizing: border-box;
+  text-align: center;
+  padding: 0;
+}
+
+/* 「1T」「2T」などのターン番号セル */
+.hist-turn-label {
+  width: 24px;
+  font-weight: bold;
+}
+
+/* 形態セル（①〜④／闇／？） */
+.hist-form-cell {
+  width: 28px;
+  font-size: 13px;
+  font-weight: bold;
+}
+
+/* 将来：現在ターンを強調するためのクラス（JSから付け替え予定） */
+.hist-form-cell.current {
+  background-color: #ffe8c0;
+}
+
+  </style>
+</head>
+<body>
+  <script>
+(function () {
+  if (document.getElementById("rta-v2-root")) {
+    return;
+  }
+
+  const templateHtml = `
+  <!--
+    開発メモ：
+    ・class="layout-hp-normal" : HP>0（通常モード）
+    ・class="layout-hp-zero"   : HP<=0（HP0モード）
+    を body 直下の #rta-v2-root に付け替えて表示を確認してください。
+  -->
+  <div id="rta-v2-root" class="layout-hp-normal">
+
+    <!-- 上段：左（メイン＋サブ）＋右 -->
+    <div class="rta-v2-top-row">
+
+      <!-- 左列：メイン＋サブ -->
+      <div class="rta-v2-top-left">
+
+        <!-- 左上メイン：キャラ＋お供レベル -->
+        <div id="rta-v2-top-lm"></div>
+
+        <!-- 左上サブ：SPARK / FORMATION（HP状態で切替） -->
+        <div id="rta-v2-top-ls">
+          <!-- HP>0：分身剣閃きブロック -->
+          <div class="rta-v2-inner-block block-spark">
+            <table class="spark-outer">
+                  <thead>
+                    <tr>
+                      <th colspan="3" class="spark-title">
+                        分身剣閃き確率
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <!-- 本体は colspan=3 の中に内部テーブルを持つ -->
+                      <td colspan="3" class="spark-container-cell">
+                        <table class="spark-inner">
+                          <tbody>
+                            <!-- 対フォル：2行（王冠 有／王冠 無） -->
+                            <tr>
+                              <td class="spark-label" rowspan="2">対フォル</td>
+                              <td class="spark-row" rowspan="2">
+                                閃き回数
+                                <span class="spin-box">
+                                  <input
+                                    type="number"
+                                    class="num-input spark-count-input"
+                                    id="spark-count-forneus"
+                                    min="0"
+                                    max="8"
+                                    value="0"
+                                    step="1"
+                                    aria-label="対フォルの閃き回数">
+                                  <div class="spin-buttons">
+                                    <button type="button" class="spin-btn spin-up">▲</button>
+                                    <button type="button" class="spin-btn spin-down">▼</button>
+                                  </div>
+                                </span>
+                              </td>
+                              <td class="spark-row">
+                                <span class="spark-crown-label">王冠 有</span>
+                                <span class="spark-rate" id="spark-rate-forneus-crown">0.00%</span>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td class="spark-row">
+                                <span class="spark-crown-label">王冠 無</span>
+                                <span class="spark-rate" id="spark-rate-forneus-nocrown">0.00%</span>
+                              </td>
+                            </tr>
+
+                            <!-- 対ビュネ：1行（王冠 無 のみ） -->
+                            <tr>
+                              <td class="spark-label">対ビュネ</td>
+                              <td class="spark-row">
+                                閃き回数
+                                <span class="spin-box">
+                                  <input
+                                    type="number"
+                                    class="num-input spark-count-input"
+                                    id="spark-count-byunei"
+                                    min="0"
+                                    max="8"
+                                    value="0"
+                                    step="1"
+                                    aria-label="対ビュネの閃き回数">
+                                  <div class="spin-buttons">
+                                    <button type="button" class="spin-btn spin-up">▲</button>
+                                    <button type="button" class="spin-btn spin-down">▼</button>
+                                  </div>
+                                </span>
+                              </td>
+                              <td class="spark-row">
+                                <span class="spark-crown-label">王冠 無</span>
+                                <span class="spark-rate" id="spark-rate-byunei-nocrown">0.00%</span>
+                              </td>
+                            </tr>
+
+                          </tbody>
+                        </table>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+          </div>
+
+          <!-- HP<=0：陣形スロットブロック -->
+          <div class="rta-v2-inner-block block-formation">
+            <div class="formation-block">
+                  <div class="formation-title">陣形配置</div>
+
+                  <div class="formation-grid">
+              <!-- 上から ④ → ② → ① → ③ → ⑤ のくの字配置 -->
+
+              <!-- ④：一番上・右寄せ -->
+              <div class="formation-cell formation-cell-4">
+                <span class="formation-label">④</span>
+                <select id="formation-slot-4" class="formation-select">
+                  <option value="">キャラ名</option>
+                </select>
+              </div>
+
+              <!-- ②：上から2つ目・やや右寄せ -->
+              <div class="formation-cell formation-cell-2">
+                <span class="formation-label">②</span>
+                <select id="formation-slot-2" class="formation-select">
+                  <option value="">キャラ名</option>
+                </select>
+              </div>
+
+              <!-- ①：中央・左寄せ -->
+              <div class="formation-cell formation-cell-1">
+                <span class="formation-label">①</span>
+                <select id="formation-slot-1" class="formation-select">
+                  <option value="">キャラ名</option>
+                </select>
+              </div>
+
+              <!-- ③：下から2つ目・やや右寄せ -->
+              <div class="formation-cell formation-cell-3">
+                <span class="formation-label">③</span>
+                <select id="formation-slot-3" class="formation-select">
+                  <option value="">キャラ名</option>
+                </select>
+              </div>
+
+              <!-- ⑤：一番下・右寄せ -->
+              <div class="formation-cell formation-cell-5">
+                <span class="formation-label">⑤</span>
+                <select id="formation-slot-5" class="formation-select">
+                  <option value="">キャラ名</option>
+                </select>
+              </div>
+            </div>
+
+
+                </div>
+          </div>
+        </div>
+
+      </div><!-- /.rta-v2-top-left -->
+
+      <!-- 右上：技リスト or 分身DMG＋形態X -->
+      <div id="rta-v2-top-right"></div>
+
+
+    </div><!-- /.rta-v2-top-row -->
+
+    <!-- 下段：フォル＆ビュネHP or 破壊ツール下段 -->
+    <div id="rta-v2-bottom">
+
+      <!-- HP>0：フォル＆ビュネHP -->
+      <div class="rta-v2-inner-block block-fb-hp">
+        <div id="boss-fb-area">
+              <div class="boss-wrapper">
+
+                <!-- フォル -->
+                <div class="boss-box" id="boss-forneus">
+                  <div class="boss-title">
+                    フォル
+                    <span class="otomo-label">
+                      お供レベル：<span id="forneus-otomo-level-display">0</span>
+                    </span>
+                  </div>
+
+                  <div class="boss-row-text">
+                    最大HP:
+                    <span class="boss-hp-static" id="forneus-max-hp">28000</span>
+                    <!-- 見えないダミーボタン（56×23のスペース確保用） -->
+                    <button
+                      type="button"
+                      class="boss-btn boss-btn-space"
+                      aria-hidden="true"
+                      tabindex="-1"></button>
+                    <button type="button" class="boss-btn" id="forneus-return">リターン</button>
+                  </div>
+
+
+                  <div class="boss-row-text">
+                    <label>ダメージ入力：
+                      <input type="text"
+                             id="forneus-damage"
+                             class="boss-dmg-input"
+                             inputmode="numeric"
+                             pattern="[0-9]*"
+                             value="">
+                    </label>
+                  </div>
+
+                  <div class="boss-remaining">
+                    残りHP:
+                    <span id="forneus-remaining" class="boss-remaining-value">28000</span>
+                    <span class="boss-last-damage-label">直前<br>ダメージ:</span>
+                    <span id="forneus-last-damage" class="boss-last-damage-value">0000</span>
+                  </div>
+                </div>
+
+                <!-- ビュネ -->
+                <div class="boss-box" id="boss-byunei">
+                  <div class="boss-title">
+                    ビュネ
+                    <span class="otomo-label">
+                      お供レベル：<span id="byunei-otomo-level-display">0</span>
+                    </span>
+                  </div>
+                <div class="boss-row-text">
+                  最大HP:
+                  <span class="boss-hp-static" id="byunei-max-hp">9000</span>
+                  <!-- 見えないダミーボタン（56×23のスペース確保用） -->
+                  <button
+                    type="button"
+                    class="boss-btn boss-btn-space"
+                    aria-hidden="true"
+                    tabindex="-1"></button>
+                  <button type="button" class="boss-btn" id="byunei-return">リターン</button>
+                </div>
+
+
+                  <div class="boss-row-text">
+                    <label>ダメージ入力：
+                      <input type="text"
+                             id="byunei-damage"
+                             class="boss-dmg-input"
+                             inputmode="numeric"
+                             pattern="[0-9]*"
+                             value="">
+                    </label>
+                  </div>
+
+                  <div class="boss-remaining">
+                    残りHP:
+                    <span id="byunei-remaining" class="boss-remaining-value">9000</span>
+                    <span class="boss-last-damage-label">直前<br>ダメージ:</span>
+                    <span id="byunei-last-damage" class="boss-last-damage-value">0000</span>
+                  </div>
+                </div>
+
+              </div><!-- /.boss-wrapper -->
+            </div><!-- /#boss-fb-area -->
+      </div>
+
+      <!-- HP<=0：破壊ツール下段 -->
+      <div class="rta-v2-inner-block block-hakai-bottom">
+        <div id="hakai-bottom-root"></div>
+      </div>
+    </div>
+
+  </div><!-- /#rta-v2-root -->
+  `;
+
+  document.body.insertAdjacentHTML("afterbegin", templateHtml);
+})();
+
+  </script>
+  <script>
+function initCharSlotBox(containerId) {
+  var root = document.getElementById(containerId);
+  if (!root) {
+    return;
+  }
+
+  // NOTE: option 要素はプレースホルダ。実際のキャラ一覧は
+  // rs3_rta_v2_char_param.js の初期化処理で RS3_CHAR_DATA から上書きする。
+  root.innerHTML = `
+          <div class="rta-v2-inner-block block-char-otomo">
+            <table class="rta-v2-char-table">
+                  <thead>
+                    <tr>
+                      <!-- A列：見出し上は空欄 -->
+                      <th class="col-role"></th>
+                      <!-- B列：剣レベル -->
+                      <th class="col-a">剣レベ</th>
+                      <!-- C列：JP -->
+                      <th class="col-b">JP</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+
+                    <!-- 行2：主 -->
+                    <tr class="rta-v2-char-row-main">
+                      <td class="char-name-cell">
+                        <div class="char-cell">
+                          <span class="char-role-label">主:</span>
+                          <span class="crown-icon"></span>
+                          <select class="char-select" id="char-main">
+                            <option value="">選択なし</option>
+                            <option value="hero1">主人公A</option>
+                            <option value="hero2">主人公B</option>
+                          </select>
+                        </div>
+                      </td>
+                      <td>
+                        <div class="spin-wrap">
+                          <input
+                            type="number"
+                            class="num-input sword-input"
+                            id="sword-main"
+                            min="0"
+                            max="50"
+                            value="0"
+                            step="1"
+                            aria-label="主人公の剣レベル">
+                          <button type="button" class="spin-btn spin-up">▲</button>
+                          <button type="button" class="spin-btn spin-down">▼</button>
+                        </div>
+                      </td>
+                      <td>
+                        <div class="spin-wrap">
+                          <input
+                            type="number"
+                            class="num-input jp-input"
+                            id="jp-main"
+                            min="0"
+                            max="50"
+                            value="0"
+                            step="1"
+                            aria-label="主人公のJP">
+                          <button type="button" class="spin-btn spin-up">▲</button>
+                          <button type="button" class="spin-btn spin-down">▼</button>
+                        </div>
+                      </td>
+                    </tr>
+
+                    <!-- 行3：仲 -->
+                    <tr class="rta-v2-char-row-main">
+                      <td class="char-name-cell">
+                        <div class="char-cell">
+                          <span class="char-role-label">仲:</span>
+                          <span class="crown-icon"></span>
+                          <select class="char-select" id="char-ally1">
+                            <option value="">選択なし</option>
+                            <option value="ally1a">仲間1A</option>
+                            <option value="ally1b">仲間1B</option>
+                          </select>
+                        </div>
+                      </td>
+                      <td>
+                        <div class="spin-wrap">
+                          <input
+                            type="number"
+                            class="num-input sword-input"
+                            id="sword-ally1"
+                            min="0"
+                            max="50"
+                            value="0"
+                            step="1"
+                            aria-label="仲間１の剣レベル">
+                          <button type="button" class="spin-btn spin-up">▲</button>
+                          <button type="button" class="spin-btn spin-down">▼</button>
+                        </div>
+                      </td>
+                      <td>
+                        <div class="spin-wrap">
+                          <input
+                            type="number"
+                            class="num-input jp-input"
+                            id="jp-ally1"
+                            min="0"
+                            max="50"
+                            value="0"
+                            step="1"
+                            aria-label="仲間１のJP">
+                          <button type="button" class="spin-btn spin-up">▲</button>
+                          <button type="button" class="spin-btn spin-down">▼</button>
+                        </div>
+                      </td>
+                    </tr>
+
+                    <!-- 行4：仲 -->
+                    <tr class="rta-v2-char-row-main">
+                      <td class="char-name-cell">
+                        <div class="char-cell">
+                          <span class="char-role-label">仲:</span>
+                          <span class="crown-icon"></span>
+                          <select class="char-select" id="char-ally2">
+                            <option value="">選択なし</option>
+                            <option value="ally2a">仲間2A</option>
+                            <option value="ally2b">仲間2B</option>
+                          </select>
+                        </div>
+                      </td>
+                      <td>
+                        <div class="spin-wrap">
+                          <input
+                            type="number"
+                            class="num-input sword-input"
+                            id="sword-ally2"
+                            min="0"
+                            max="50"
+                            value="0"
+                            step="1"
+                            aria-label="仲間２の剣レベル">
+                          <button type="button" class="spin-btn spin-up">▲</button>
+                          <button type="button" class="spin-btn spin-down">▼</button>
+                        </div>
+                      </td>
+                      <td>
+                        <div class="spin-wrap">
+                          <input
+                            type="number"
+                            class="num-input jp-input"
+                            id="jp-ally2"
+                            min="0"
+                            max="50"
+                            value="0"
+                            step="1"
+                            aria-label="仲間２のJP">
+                          <button type="button" class="spin-btn spin-up">▲</button>
+                          <button type="button" class="spin-btn spin-down">▼</button>
+                        </div>
+                      </td>
+                    </tr>
+
+                    <!-- 行5：仲 -->
+                    <tr class="rta-v2-char-row-main">
+                      <td class="char-name-cell">
+                        <div class="char-cell">
+                          <span class="char-role-label">仲:</span>
+                          <span class="crown-icon"></span>
+                          <select class="char-select" id="char-ally3">
+                            <option value="">選択なし</option>
+                            <option value="ally3a">仲間3A</option>
+                            <option value="ally3b">仲間3B</option>
+                          </select>
+                        </div>
+                      </td>
+                      <td>
+                        <div class="spin-wrap">
+                          <input
+                            type="number"
+                            class="num-input sword-input"
+                            id="sword-ally3"
+                            min="0"
+                            max="50"
+                            value="0"
+                            step="1"
+                            aria-label="仲間３の剣レベル">
+                          <button type="button" class="spin-btn spin-up">▲</button>
+                          <button type="button" class="spin-btn spin-down">▼</button>
+                        </div>
+                      </td>
+                      <td>
+                        <div class="spin-wrap">
+                          <input
+                            type="number"
+                            class="num-input jp-input"
+                            id="jp-ally3"
+                            min="0"
+                            max="50"
+                            value="0"
+                            step="1"
+                            aria-label="仲間３のJP">
+                          <button type="button" class="spin-btn spin-up">▲</button>
+                          <button type="button" class="spin-btn spin-down">▼</button>
+                        </div>
+                      </td>
+                    </tr>
+
+                    <!-- 行6：仲 -->
+                    <tr class="rta-v2-char-row-main">
+                      <td class="char-name-cell">
+                        <div class="char-cell">
+                          <span class="char-role-label">仲:</span>
+                          <span class="crown-icon"></span>
+                          <select class="char-select" id="char-ally4">
+                            <option value="">選択なし</option>
+                            <option value="ally4a">仲間4A</option>
+                            <option value="ally4b">仲間4B</option>
+                          </select>
+                        </div>
+                      </td>
+                      <td>
+                        <div class="spin-wrap">
+                          <input
+                            type="number"
+                            class="num-input sword-input"
+                            id="sword-ally4"
+                            min="0"
+                            max="50"
+                            value="0"
+                            step="1"
+                            aria-label="仲間４の剣レベル">
+                          <button type="button" class="spin-btn spin-up">▲</button>
+                          <button type="button" class="spin-btn spin-down">▼</button>
+                        </div>
+                      </td>
+                      <td>
+                        <div class="spin-wrap">
+                          <input
+                            type="number"
+                            class="num-input jp-input"
+                            id="jp-ally4"
+                            min="0"
+                            max="50"
+                            value="0"
+                            step="1"
+                            aria-label="仲間４のJP">
+                          <button type="button" class="spin-btn spin-up">▲</button>
+                          <button type="button" class="spin-btn spin-down">▼</button>
+                        </div>
+                      </td>
+                    </tr>
+
+                    <!-- 行7：お供LVチェック ヘッダ行 -->
+                    <tr class="rta-v2-char-row-otomo-header">
+                      <td class="char-name-cell otomo-header-cell">
+                        <span class="char-role-label">お供LVチェック</span>
+                      </td>
+                      <td class="support-hp-header">
+                        HP
+                      </td>
+                      <td class="support-reset-header">
+                        <button type="button" class="support-reset-btn">
+                          リセット
+                        </button>
+                      </td>
+                    </tr>
+
+                    <!-- 行8：お供行（供：キャラスロット＋HP＋お供LV） -->
+                    <tr class="rta-v2-char-row-otomo">
+                      <td class="char-name-cell">
+                        <div class="char-cell">
+                          <span class="char-role-label">供:</span>
+                          <select class="char-select" id="support-char">
+                            <!-- 本番では rs3chrparam.js から
+                                 ハーマン／タチアナのみを取得する想定 -->
+                            <option value="herman">ハーマン</option>
+                            <option value="tatiana">タチアナ</option>
+                          </select>
+                        </div>
+                      </td>
+                      <td>
+                        <div class="spin-wrap">
+                          <input
+                            type="number"
+                            class="num-input"
+                            id="support-hp"
+                            min="0"
+                            max="999"
+                            value="210"
+                            step="15"
+                            aria-label="お供の現在HP">
+                          <button type="button" class="spin-btn spin-up">▲</button>
+                          <button type="button" class="spin-btn spin-down">▼</button>
+                        </div>
+                      </td>
+                      <td>
+                        <span class="support-lv-label">お供LV:</span>
+                        <span id="support-lv">0</span>
+                      </td>
+                    </tr>
+
+                  </tbody>
+                </table>
+          </div>`;
+}
+
+  </script>
+  <script>
+// ロマサガ3 キャラクターパラメータ（必要分）
+// name は元データ準拠（「一」が長音に使われているものもそのまま）
+// sword = 剣レベル初期値
+// seiryu, syucho, byakko, genbu, taiyo, tsuki = 蒼龍・朱鳥・白虎・玄武・太陽・月
+
+const RS3_CHAR_DATA = [
+
+  { id: 0,  name: 'ユリアン',      hp: 80,  sword: 2,  seiryu: 0,  syucho: 0,  byakko: 0,  genbu: 0,  taiyo: 0,  tsuki: 0,  techtype:01 },
+  { id: 1,  name: 'エレン',        hp: 85,  sword: 0,  seiryu: 0,  syucho: 0,  byakko: 0,  genbu: 0,  taiyo: 0,  tsuki: 0,  techtype:08 },
+  { id: 2,  name: 'サラ',          hp: 70,  sword: 0,  seiryu: 0,  syucho: 0,  byakko: 0,  genbu: 0,  taiyo: 0,  tsuki: 0,  techtype:07 },
+  { id: 3,  name: 'ト一マス',      hp: 75,  sword: 1,  seiryu: 0,  syucho: 0,  byakko: 0,  genbu: 2,  taiyo: 0,  tsuki: 0,  techtype:06 },
+  { id: 4,  name: 'ハリ一ド',      hp: 170, sword: 7,  seiryu: 0,  syucho: 0,  byakko: 0,  genbu: 0,  taiyo: 0,  tsuki: 0,  techtype:01 },
+  { id: 5,  name: 'ミカエル',      hp: 145, sword: 2,  seiryu: 0,  syucho: 0,  byakko: 0,  genbu: 0,  taiyo: 5,  tsuki: 0,  techtype:05 },
+  { id: 6,  name: 'モニカ',        hp: 65,  sword: 0,  seiryu: 0,  syucho: 0,  byakko: 0,  genbu: 0,  taiyo: 0,  tsuki: 0,  techtype:05 },
+  { id: 7,  name: 'カタリナ',      hp: 140, sword: 6,  seiryu: 0,  syucho: 0,  byakko: 0,  genbu: 0,  taiyo: 0,  tsuki: 0,  techtype:02 },
+
+  { id: 8,  name: 'レオニ一ド',    hp: 666, sword: 20, seiryu: 0,  syucho: 0,  byakko: 0,  genbu: 0,  taiyo: 0,  tsuki: 0,  techtype:05 },
+  { id: 9,  name: '少年',          hp: 180, sword: 3,  seiryu: 0,  syucho: 0,  byakko: 0,  genbu: 0,  taiyo: 0,  tsuki: 0,  techtype:09 },
+  { id: 10, name: 'ティベリウス',  hp: 90,  sword: 0,  seiryu: 0,  syucho: 0,  byakko: 0,  genbu: 9,  taiyo: 4,  tsuki: 0,  techtype:00 },
+  { id: 11, name: 'ウォ一ド',      hp: 180, sword: 7,  seiryu: 0,  syucho: 0,  byakko: 0,  genbu: 0,  taiyo: 0,  tsuki: 0,  techtype:02 },
+  { id: 12, name: 'ポ一ル',        hp: 120, sword: 2,  seiryu: 0,  syucho: 0,  byakko: 0,  genbu: 0,  taiyo: 0,  tsuki: 0,  techtype:09 },
+  { id: 13, name: 'ロビン(細)',        hp: 180, sword: 10, seiryu: 10, syucho: 0,  byakko: 0,  genbu: 0,  taiyo: 0,  tsuki: 0,  techtype:05 },
+  { id: 14, name: 'ロビン(太)',        hp: 200, sword: 6,  seiryu: 0,  syucho: 0,  byakko: 0,  genbu: 0,  taiyo: 0,  tsuki: 0,  techtype:05 },
+  { id: 15, name: 'ミュ一ズ',      hp: 110, sword: 0,  seiryu: 0,  syucho: 0,  byakko: 0,  genbu: 0,  taiyo: 0,  tsuki: 0,  techtype:00 },
+  { id: 16, name: 'シャ一ル',      hp: 240, sword: 10, seiryu: 0,  syucho: 15, byakko: 0,  genbu: 0,  taiyo: 0,  tsuki: 0,  techtype:10 },
+  { id: 17, name: '詩人',          hp: 120, sword: 3,  seiryu: 0,  syucho: 0,  byakko: 0,  genbu: 0,  taiyo: 0,  tsuki: 0,  techtype:01 },
+  { id: 18, name: 'タチアナ',      hp: 65,  sword: 0,  seiryu: 0,  syucho: 0,  byakko: 0,  genbu: 0,  taiyo: 0,  tsuki: 0,  techtype:05 },
+  { id: 19, name: 'ヤン ファン',   hp: 250, sword: 5,  seiryu: 0,  syucho: 0,  byakko: 0,  genbu: 0,  taiyo: 0,  tsuki: 15,  techtype:10 },
+
+  { id: 20, name: 'ウンディ一ネ',  hp: 330, sword: 0,  seiryu: 0,  syucho: 0,  byakko: 0,  genbu: 21, taiyo: 0,  tsuki: 0,  techtype:00 },
+  { id: 21, name: 'ツィ一 リン',   hp: 160, sword: 0,  seiryu: 0,  syucho: 0,  byakko: 0,  genbu: 0,  taiyo: 0,  tsuki: 0,  techtype:07 },
+  { id: 22, name: 'ハ一マン',      hp: 210, sword: 6,  seiryu: 7,  syucho: 0,  byakko: 0,  genbu: 0,  taiyo: 0,  tsuki: 0,  techtype:03 },
+  { id: 23, name: 'フルブライト',  hp: 180, sword: 0,  seiryu: 0,  syucho: 0,  byakko: 5,  genbu: 0,  taiyo: 5,  tsuki: 0,  techtype:00 },
+  { id: 24, name: 'バイメイニャン',hp: 300, sword: 0,  seiryu: 27, syucho: 0,  byakko: 0,  genbu: 0,  taiyo: 0,  tsuki: 0,  techtype:00 },
+  { id: 25, name: 'ノ一ラ',        hp: 140, sword: 0,  seiryu: 0,  syucho: 0,  byakko: 0,  genbu: 0,  taiyo: 0,  tsuki: 0,  techtype:04 },
+  { id: 26, name: 'ブラック',      hp: 210, sword: 6,  seiryu: 7,  syucho: 0,  byakko: 0,  genbu: 0,  taiyo: 0,  tsuki: 0,  techtype:03 },
+  { id: 28, name: 'ようせい',      hp: 140, sword: 10, seiryu: 0,  syucho: 0,  byakko: 0,  genbu: 0,  taiyo: 0,  tsuki: 0,  techtype:06 },
+  { id: 29, name: 'ボストン',      hp: 170, sword: 0,  seiryu: 0,  syucho: 0,  byakko: 0,  genbu: 10, taiyo: 0,  tsuki: 0,  techtype:08 },
+  { id: 30, name: 'ぞう',          hp: 280, sword: 3,  seiryu: 0,  syucho: 0,  byakko: 0,  genbu: 0,  taiyo: 0,  tsuki: 0,  techtype:03 },
+  { id: 31, name: 'ゆきだるま',    hp: 180, sword: 0,  seiryu: 0,  syucho: 0,  byakko: 0,  genbu: 15, taiyo: 0,  tsuki: 0,  techtype:08 },
+
+];
+
+// ここを必ず入れる！
+window.RS3_CHAR_DATA = RS3_CHAR_DATA;
+  </script>
+  <script>
+// rs3_rta_v2_char_param.js
+// ============================================================
+// 役割：
+//   ・rs3chrparam.js（RS3_CHAR_DATA）を元に、
+//       - 主人公／仲間1〜4プルダウンへキャラ一覧を流し込む
+//       - 選択されたキャラに応じて「剣レベル／JP」を自動設定する
+//       - お供キャラ（ハーマン／タチアナ）の基礎HPを自動設定する
+//   ・現在の選択状態（どの枠にどのキャラIDが入っているか）を
+//     rs3_rta_v2_party_state として保持し、
+//     他のロジックから参照できるようにする。
+//
+// 仕様：
+//   ・主人公スロットの候補は「ユリアン〜カタリナ」の 8人に限定。
+//   ・JP は術適性（蒼龍・朱鳥・白虎・玄武・太陽・月）の上位2つから算出。
+//       JP = (最大値 * 3) + 2番目
+//     ただし主人公スロットでは JP が 0 の場合、最低値 5 に補正。
+//   ・主／仲プルダウンに「選択なし」は置かない。
+// ============================================================
+(function (global) {
+  "use strict";
+
+  // ----------------------------------------------------------
+  // 0. 前提チェック
+  // ----------------------------------------------------------
+  if (!global.RS3_CHAR_DATA || !Array.isArray(global.RS3_CHAR_DATA)) {
+    console.warn("[rs3_rta_v2_char_param] RS3_CHAR_DATA が見つかりません。rs3chrparam.js の読み込み順を確認してください。");
+    return;
+  }
+
+  const CHAR_DATA = global.RS3_CHAR_DATA;
+
+  const CHAR_BY_ID = (function buildCharById() {
+    const map = Object.create(null);
+    CHAR_DATA.forEach(function (ch) {
+      map[ch.id] = ch;
+    });
+    return map;
+  })();
+
+  function toDisplayName(name) {
+    return String(name || "").replace(/一/g, "ー");
+  }
+
+  const PROTAGONIST_IDS = [0, 1, 2, 3, 4, 5, 6, 7];
+  const ALL_ALLY_IDS = CHAR_DATA.map(function (ch) { return ch.id; });
+
+  const DEFAULT_PARTY = {
+    main: 7,   // カタリナ
+    ally1: 4,  // ハリード
+    ally2: 13, // ロビン(細)
+    ally3: 28, // ようせい
+    ally4: 22  // ハーマン
+  };
+
+  function byId(id) {
+    return document.getElementById(id) || null;
+  }
+
+  function getIntOrNull(value) {
+    const n = Number(value);
+    if (!Number.isFinite(n)) return null;
+    return Math.floor(n);
+  }
+
+  const PARTY_SLOTS = [
+    {
+      roleKey: "main",
+      charSelectId: "char-main",
+      swordInputId: "sword-main",
+      jpInputId: "jp-main",
+      labelPrefix: "主",
+      candidateIds: PROTAGONIST_IDS
+    },
+    {
+      roleKey: "ally1",
+      charSelectId: "char-ally1",
+      swordInputId: "sword-ally1",
+      jpInputId: "jp-ally1",
+      labelPrefix: "仲1",
+      candidateIds: ALL_ALLY_IDS
+    },
+    {
+      roleKey: "ally2",
+      charSelectId: "char-ally2",
+      swordInputId: "sword-ally2",
+      jpInputId: "jp-ally2",
+      labelPrefix: "仲2",
+      candidateIds: ALL_ALLY_IDS
+    },
+    {
+      roleKey: "ally3",
+      charSelectId: "char-ally3",
+      swordInputId: "sword-ally3",
+      jpInputId: "jp-ally3",
+      labelPrefix: "仲3",
+      candidateIds: ALL_ALLY_IDS
+    },
+    {
+      roleKey: "ally4",
+      charSelectId: "char-ally4",
+      swordInputId: "sword-ally4",
+      jpInputId: "jp-ally4",
+      labelPrefix: "仲4",
+      candidateIds: ALL_ALLY_IDS
+    }
+  ];
+
+  const partyState = {
+    main: null,
+    ally1: null,
+    ally2: null,
+    ally3: null,
+    ally4: null
+  };
+
+  // ----------------------------------------------------------
+  // 2. 分身剣適正 ＋ アイコン表示制御
+  //    ・techtype から「分身剣の閃き適正あり／なし」を判定
+  //    ・【適正なし ＞ 王冠 ＞ 何もなし】の優先で
+  //      .crown-icon に付けるクラスを決める
+  // ----------------------------------------------------------
+
+  // 分身剣：分身剣.txt による techtype ごとの適正表
+  // TY00,TY03,TY04,TY06,TY07,TY08 が ×、他は ○
+  const BUNSHIN_OK_BY_TECHTYPE = {
+    TY00: false,
+    TY01: true,
+    TY02: true,
+    TY03: false,
+    TY04: false,
+    TY05: true,
+    TY06: false,
+    TY07: false,
+    TY08: false,
+    TY09: true,
+    TY10: true,
+    TY11: true,
+    TY12: true,
+    TY13: true,
+    TY14: true,
+    TY15: true
+  };
+
+  // RS3_CHAR_DATA 側の techtype を "TY00"〜"TY15" に正規化
+  function getTechtypeKeyFromChar(charData) {
+    if (!charData || charData.techtype == null) return null;
+
+    var t = charData.techtype;
+
+    // 文字列で持っている場合（例: "ty02" / "TY02"）
+    if (typeof t === "string") {
+      return String(t).toUpperCase();
+    }
+
+    // 数値で持っている場合（例: 2 → "TY02"）
+    var n = Number(t);
+    if (Number.isFinite(n)) {
+      if (n < 0 || n > 15) return null;
+      return (n < 10 ? "TY0" : "TY") + String(n);
+    }
+
+    return null;
+  }
+
+  // 分身剣の閃き適正が「あるかどうか」
+  function hasBunshinApt(charData) {
+    var key = getTechtypeKeyFromChar(charData);
+    if (!key) return false;
+
+    if (!Object.prototype.hasOwnProperty.call(BUNSHIN_OK_BY_TECHTYPE, key)) {
+      return false;
+    }
+    return !!BUNSHIN_OK_BY_TECHTYPE[key];
+  }
+
+  // .crown-icon に状態クラスを付け替える
+  // state: "nolight" | "crown" | "empty"
+  function setIconState(iconEl, state) {
+    if (!iconEl) return;
+
+    iconEl.classList.remove("icon-nolight", "icon-crown", "icon-empty");
+
+    if (state === "nolight") {
+      iconEl.classList.add("icon-nolight");
+    } else if (state === "crown") {
+      iconEl.classList.add("icon-crown");
+    } else {
+      iconEl.classList.add("icon-empty");
+    }
+  }
+
+  // 対象スロット（main / ally1〜4）に対応する .crown-icon を探す
+  // 前提：各キャラ枠の HTML が
+  //   <div class="char-cell">
+  //     <span class="char-role-label">主:</span>
+  //     <span class="crown-icon"></span>
+  //     <select id="char-xxxx">...
+  //   </div>
+  function findIconElementForSlot(slot) {
+    var sel = byId(slot.charSelectId);
+    if (!sel) return null;
+
+    var cell = sel.closest(".char-cell");
+    if (!cell) return null;
+
+    return cell.querySelector(".crown-icon");
+  }
+
+  // スロットごとのアイコン状態を更新する
+  // 優先順位：【適正なし ＞ 王冠 ＞ 何もなし】
+  function updateIconForSlot(slot, charDataOrNull) {
+    var iconEl = findIconElementForSlot(slot);
+    if (!iconEl) return;
+
+    // キャラ未選択 → 何もなし（空枠）
+    if (!charDataOrNull) {
+      setIconState(iconEl, "empty");
+      return;
+    }
+
+    // 分身剣の閃き適正なし → nolight アイコン固定
+    if (!hasBunshinApt(charDataOrNull)) {
+      setIconState(iconEl, "nolight");
+      return;
+    }
+
+    // 分身剣適正あり → JP = 0 なら王冠、それ以外は空枠
+    var jpInput = byId(slot.jpInputId);
+    var jp = 0;
+
+    if (jpInput) {
+      var n = Number(jpInput.value);
+      if (Number.isFinite(n)) {
+        jp = Math.floor(n);
+      }
+    }
+
+    if (jp === 0) {
+      setIconState(iconEl, "crown");
+    } else {
+      setIconState(iconEl, "empty");
+    }
+  }
+
+
+  // ----------------------------------------------------------
+  // 3. JP算出ロジック
+  // ----------------------------------------------------------
+  function computeJP(charData, isMain) {
+    const arr = [
+      charData.seiryu || 0,
+      charData.syucho || 0,
+      charData.byakko || 0,
+      charData.genbu || 0,
+      charData.taiyo || 0,
+      charData.tsuki || 0
+    ];
+
+    const sorted = arr.slice().sort(function (a, b) { return b - a; });
+    const top = sorted[0] || 0;
+    const second = sorted[1] || 0;
+
+    let jp = top * 3 + second;
+
+    if (isMain && jp === 0) {
+      jp = 5;
+    }
+
+    return jp;
+  }
+
+  // ----------------------------------------------------------
+  // 4. 主／仲プルダウンへキャラ一覧を流し込む
+  // ----------------------------------------------------------
+  function buildCharOptionsForSelect(selectEl, candidateIds) {
+    if (!selectEl) return;
+
+    const chars = candidateIds
+      .map(function (id) { return CHAR_BY_ID[id]; })
+      .filter(function (ch) { return !!ch; })
+      .slice()
+      .sort(function (a, b) { return a.id - b.id; });
+
+    selectEl.innerHTML = "";
+
+    chars.forEach(function (ch) {
+      const opt = document.createElement("option");
+      opt.value = String(ch.id);
+      opt.textContent = toDisplayName(ch.name);
+      selectEl.appendChild(opt);
+    });
+  }
+
+  function initAllCharSelects() {
+    PARTY_SLOTS.forEach(function (slot) {
+      const sel = byId(slot.charSelectId);
+      if (!sel) return;
+      buildCharOptionsForSelect(sel, slot.candidateIds);
+    });
+  }
+
+  // ----------------------------------------------------------
+  // 5. 主／仲選択 → 剣レベル／JP 自動設定
+  // ----------------------------------------------------------
+function applyCharSelectionForSlot(slot, charIdOrNull) {
+  partyState[slot.roleKey] = charIdOrNull;
+
+  const swordInput = byId(slot.swordInputId);
+  const jpInput    = byId(slot.jpInputId);
+
+  // 「選択なし」などでキャラが居ない場合
+  if (charIdOrNull == null) {
+    if (swordInput) swordInput.value = "0";
+    if (jpInput)    jpInput.value    = "0";
+
+    // アイコンも空枠にしておく
+    updateIconForSlot(slot, null);
+    return;
+  }
+
+  const ch = CHAR_BY_ID[charIdOrNull];
+  if (!ch) {
+    if (swordInput) swordInput.value = "0";
+    if (jpInput)    jpInput.value    = "0";
+
+    updateIconForSlot(slot, null);
+    return;
+  }
+
+  // 剣レベル初期値
+  if (swordInput) {
+    const swordLv = getIntOrNull(ch.sword);
+    swordInput.value = swordLv != null ? String(swordLv) : "0";
+  }
+
+  // JP初期値（主人公だけ JP=0 を 5 に補正する既存仕様）
+  if (jpInput) {
+    const isMain = slot.roleKey === "main";
+    const jp     = computeJP(ch, isMain);
+    jpInput.value = String(jp);
+  }
+
+  // 分身剣適正／JP に応じてアイコン更新
+  updateIconForSlot(slot, ch);
+}
+
+
+  function onCharSelectChange(slot, event) {
+    const sel = event.currentTarget;
+    const val = sel.value;
+
+    const idNum = getIntOrNull(val);
+    if (idNum == null) {
+      applyCharSelectionForSlot(slot, null);
+    } else {
+      applyCharSelectionForSlot(slot, idNum);
+    }
+
+    if (global.rs3_rta_v2_bunshin_link &&
+        typeof global.rs3_rta_v2_bunshin_link.recalc === "function") {
+      global.rs3_rta_v2_bunshin_link.recalc();
+    }
+  }
+
+  function attachCharSelectHandlers() {
+    PARTY_SLOTS.forEach(function (slot) {
+      const sel = byId(slot.charSelectId);
+      if (!sel) return;
+      sel.addEventListener("change", onCharSelectChange.bind(null, slot));
+    });
+  }
+
+  // ----------------------------------------------------------
+  // 6. お供キャラ（ハーマン／タチアナ）HP連動
+  // ----------------------------------------------------------
+  var supportBaseHp = null;  // 現在選択中お供の「基準HP」を保持
+
+  // 現在の support-hp 入力値を基準HPでクランプし、
+  // 基準HPとの差分から「お供レベル」を算出して反映する。
+  function clampSupportHpAndUpdateLevel() {
+    var hpInput = byId("support-hp");
+    if (!hpInput) return;
+
+    var base = supportBaseHp != null ? supportBaseHp : 0;
+    var raw = getIntOrNull(hpInput.value);
+    if (raw == null) raw = base;
+
+    // デフォルト値より小さくならないように下限を固定
+    if (raw < base) raw = base;
+
+    // レベル算出： (現在HP - 基準HP) / 15 の切り捨て、下限 0
+    var level = 0;
+    if (supportBaseHp != null && raw > base) {
+      var diff = raw - base;
+      level = Math.floor(diff / 15);
+      if (level < 0) level = 0;
+    }
+
+    hpInput.value = String(raw);
+
+    // ★ お供レベル表示用の入力欄
+    // id="support-level" の <input> が存在する前提です。
+    // 別IDで運用されている場合は、この取得IDだけ合わせてくださいませ。
+    var lvlInput = byId("support-level");
+    if (lvlInput) {
+      lvlInput.value = String(level);
+    }
+  }
+
+  function findCharByExactName(name) {
+    for (var i = 0; i < CHAR_DATA.length; i++) {
+      if (CHAR_DATA[i].name === name) return CHAR_DATA[i];
+    }
+    return null;
+  }
+
+  function findSupportCharData(supportValue) {
+    if (supportValue === "herman") {
+      return findCharByExactName("ハ一マン");
+    }
+    if (supportValue === "tatiana") {
+      return findCharByExactName("タチアナ");
+    }
+    return null;
+  }
+
+  function applySupportCharSelection(value) {
+    const hpInput = byId("support-hp");
+    if (!hpInput) return;
+
+    const ch = findSupportCharData(value);
+    if (!ch) {
+      supportBaseHp = null;
+      hpInput.value = "0";
+
+      // お供レベルも 0 にリセット
+      var lvlInput = byId("support-level");
+      if (lvlInput) {
+        lvlInput.value = "0";
+      }
+      return;
+    }
+
+    const baseHp = getIntOrNull(ch.hp);
+    const hpValue = baseHp != null ? baseHp : 0;
+
+    // 基準HPを覚えておく
+    supportBaseHp = hpValue;
+
+    // 最低値と刻み幅を設定
+    hpInput.min = String(hpValue);
+    hpInput.step = "15";           // ★ HPスピンボタンは 15 刻み
+    hpInput.value = String(hpValue);
+
+    // 基準HP時点でレベル0として反映
+    clampSupportHpAndUpdateLevel();
+  }
+
+  function onSupportHpChange() {
+    clampSupportHpAndUpdateLevel();
+  }
+
+  function attachSupportHpHandler() {
+    var hpInput = byId("support-hp");
+    if (!hpInput) return;
+
+    // スピンボタン／キーボード入力の両方に対応
+    hpInput.addEventListener("change", onSupportHpChange);
+    hpInput.addEventListener("input", onSupportHpChange);
+  }
+
+  function onSupportCharChange(event) {
+    const sel = event.currentTarget;
+    applySupportCharSelection(sel.value);
+  }
+
+  function initSupportChar() {
+    const sel = byId("support-char");
+    if (!sel) return;
+
+    sel.addEventListener("change", onSupportCharChange);
+
+    // 初期選択に応じて基準HP／レベルを反映
+    applySupportCharSelection(sel.value);
+
+    // HP入力の変更を監視して、お供レベルを更新
+    attachSupportHpHandler();
+  }
+
+  function setupSpinSteps() {
+    // 剣レベル／JP は 1 刻み
+    PARTY_SLOTS.forEach(function (slot) {
+      var swordInput = byId(slot.swordInputId);
+      var jpInput = byId(slot.jpInputId);
+
+      if (swordInput) swordInput.step = "1";
+      if (jpInput)   jpInput.step = "1";
+    });
+
+    // お供HP は 15 刻み（基準HPセット時にも再設定しているが、念のため）
+    var supportHp = byId("support-hp");
+    if (supportHp) {
+      supportHp.step = "15";
+    }
+  }
+
+  // ----------------------------------------------------------
+  // 7. 初期化
+  // ----------------------------------------------------------
+  function initCharParam() {
+    initAllCharSelects();
+
+    PARTY_SLOTS.forEach(function (slot) {
+      const sel = byId(slot.charSelectId);
+      if (!sel) return;
+
+      const defaultId = DEFAULT_PARTY[slot.roleKey];
+
+      if (typeof defaultId === "number") {
+        sel.value = String(defaultId);
+        applyCharSelectionForSlot(slot, defaultId);
+      } else if (sel.options.length > 0) {
+        const firstId = getIntOrNull(sel.options[0].value);
+        if (firstId != null) {
+          sel.value = sel.options[0].value;
+          applyCharSelectionForSlot(slot, firstId);
+        } else {
+          applyCharSelectionForSlot(slot, null);
+        }
+      } else {
+        applyCharSelectionForSlot(slot, null);
+      }
+    });
+
+    attachCharSelectHandlers();
+    initSupportChar();
+
+    // ★ スピンボタンの刻み幅を設定
+    setupSpinSteps();
+
+    if (global.rs3_rta_v2_bunshin_link &&
+        typeof global.rs3_rta_v2_bunshin_link.recalc === "function") {
+      global.rs3_rta_v2_bunshin_link.recalc();
+    }
+  }
+
+  // ----------------------------------------------------------
+  // 8. スピンボタン（▲▼）共通処理
+  //   ・剣レベル／JP：1刻み
+  //   ・お供HP：15刻み（step属性に従う）
+  //   ・お供HPは基準値より小さくならないようにし、
+  //     15ごとにお供LVを1ずつ上げる
+  // ----------------------------------------------------------
+
+  // 汎用：number入力を step 分だけ増減させる
+  function adjustNumberInputBySpin(input, direction) {
+    if (!input) return;
+
+    var step = parseInt(input.step, 10);
+    if (!Number.isFinite(step) || step <= 0) {
+      step = 1;
+    }
+
+    var min = null;
+    if (input.min !== "") {
+      var minVal = parseInt(input.min, 10);
+      if (Number.isFinite(minVal)) min = minVal;
+    }
+
+    var max = null;
+    if (input.max !== "") {
+      var maxVal = parseInt(input.max, 10);
+      if (Number.isFinite(maxVal)) max = maxVal;
+    }
+
+    var value = parseInt(input.value, 10);
+    if (!Number.isFinite(value)) {
+      value = 0;
+    }
+
+    value = value + step * direction;
+
+    if (min != null && value < min) value = min;
+    if (max != null && value > max) value = max;
+
+    input.value = String(value);
+
+    // ★ ここから追加：もともとブラウザがやっていた input/change を自前で飛ばす
+    var evInput = new Event("input",  { bubbles: true });
+    var evChange = new Event("change", { bubbles: true });
+    input.dispatchEvent(evInput);
+    input.dispatchEvent(evChange);
+  }
+
+  // お供HP → お供LV の反映
+  function updateSupportLevelFromHp() {
+    var hpInput = document.getElementById("support-hp");
+    var lvSpan  = document.getElementById("support-lv");
+    var sel     = document.getElementById("support-char");
+
+    if (!hpInput || !lvSpan) return;
+
+    var hp = parseInt(hpInput.value, 10);
+    if (!Number.isFinite(hp)) {
+      hp = 0;
+    }
+
+    // 基準HPの決定（指定どおり固定値）
+    var baseHp = null;
+    if (sel) {
+      if (sel.value === "herman") {
+        baseHp = 210;
+      } else if (sel.value === "tatiana") {
+        baseHp = 65;
+      }
+    }
+
+    // support-char が不明な場合は、min か現在値を基準にしておく
+    if (baseHp == null) {
+      var min = parseInt(hpInput.min, 10);
+      if (Number.isFinite(min)) {
+        baseHp = min;
+      } else {
+        baseHp = hp;
+      }
+    }
+
+    // 「デフォルト値より小さくならない」ようにクランプ
+    if (hp < baseHp) {
+      hp = baseHp;
+      hpInput.value = String(hp);
+    }
+
+    // 念のため min 属性も揃えておく
+    hpInput.min = String(baseHp);
+
+    // レベル算出： (HP - 基準HP) / 15 の切り捨て、下限0
+    var diff = hp - baseHp;
+    var level = 0;
+    if (diff > 0) {
+      level = Math.floor(diff / 15);
+      if (level < 0) level = 0;
+    }
+
+    lvSpan.textContent = String(level);
+  }
+
+  // スピンボタンが押されたときの処理
+  function handleSpinButtonClick(buttonEl) {
+    if (!buttonEl.classList.contains("spin-btn")) return;
+
+    // 同じ .spin-wrap 内の input[type=number] を探す
+    var wrap = buttonEl.closest(".spin-wrap");
+    if (!wrap) return;
+
+    var input = wrap.querySelector("input[type='number']");
+    if (!input) return;
+
+    var direction = buttonEl.classList.contains("spin-up") ? +1 : -1;
+
+    adjustNumberInputBySpin(input, direction);
+
+    // お供HPの場合はレベルも更新
+    if (input.id === "support-hp") {
+      updateSupportLevelFromHp();
+    }
+  }
+
+  // 初期化：全スピンボタンにイベントを貼る
+  function attachSpinHandlers() {
+    // 個別に全部に付けてもよいですが、
+    // 将来ボタンが増えても動くようにイベント委譲にしておきます。
+    var root = document.getElementById("rta-v2-root") || document;
+    root.addEventListener("click", function (ev) {
+      var target = ev.target;
+      if (!(target instanceof HTMLElement)) return;
+      if (target.classList.contains("spin-btn")) {
+        handleSpinButtonClick(target);
+      }
+    });
+
+    // お供HPを手入力で変えたときもレベルを再計算
+    var hpInput = document.getElementById("support-hp");
+    if (hpInput) {
+      hpInput.addEventListener("change", updateSupportLevelFromHp);
+      hpInput.addEventListener("input", updateSupportLevelFromHp);
+    }
+
+    // お供キャラを切り替えたときも基準HP／レベルを再計算
+    var sel = document.getElementById("support-char");
+    if (sel) {
+      sel.addEventListener("change", function () {
+        updateSupportLevelFromHp();
+      });
+    }
+  }
+
+  // ----------------------------------------------------------
+  // 9. 外部から呼ぶ初期化入口
+  // ----------------------------------------------------------
+  function initRtaV2CharModule() {
+    // NOTE: 先にキャラスロットHTMLを生成してから呼び出さないと
+    // byId("char-main") などが null となり、RS3_CHAR_DATA の反映に失敗する。
+    initCharParam();
+
+    // スピンボタンのイベントと、お供LV連動を初期化
+    attachSpinHandlers();
+    updateSupportLevelFromHp();  // 初期表示を基準HP・LV0に揃える
+  }
+
+  global.rs3_rta_v2_char_module = {
+    init: initRtaV2CharModule
+  };
+
+  global.rs3_rta_v2_party_state = {
+    getState: function () {
+      return {
+        main: partyState.main,
+        ally1: partyState.ally1,
+        ally2: partyState.ally2,
+        ally3: partyState.ally3,
+        ally4: partyState.ally4
+      };
+    }
+  };
+
+})(this);
+
+  </script>
+  <script>
+function initRightTecBox(containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) {
+    console.warn("initRightTecBox: container not found", containerId);
+    return;
+  }
+
+  container.innerHTML = `
+        <!-- HP>0：技チェックリスト -->
+        <div class="rta-v2-inner-block block-techlist">
+          <table class="tlist-table">
+                <thead>
+                  <tr>
+                    <th class="col-tech">技名</th>
+                    <th class="col-gokui">極</th>
+                    <th class="col-main">閃</th>
+                  </tr>
+                </thead>
+                <tbody>
+
+                  <!-- 1〜12行目：固定技リスト -->
+
+                  <tr>
+                    <td class="tech-name-cell">
+                      <span class="tech-name-text">なぎ払い</span>
+                    </td>
+                    <td class="tech-check-cell">
+                      <input type="checkbox" class="chk-gokui" id="gokui-1" aria-label="なぎ払いの極意化済チェック">
+                    </td>
+                    <td class="tech-check-cell">
+                      <input type="checkbox" class="chk-main" id="main-1" aria-label="なぎ払いを主が閃いたチェック">
+                    </td>
+                  </tr>
+
+                  <tr>
+                    <td class="tech-name-cell">
+                      <span class="tech-name-text">かすみ二段</span>
+                    </td>
+                    <td class="tech-check-cell">
+                      <input type="checkbox" class="chk-gokui" id="gokui-2" aria-label="かすみ二段の極意化済チェック">
+                    </td>
+                    <td class="tech-check-cell">
+                      <input type="checkbox" class="chk-main" id="main-2" aria-label="かすみ二段を主が閃いたチェック">
+                    </td>
+                  </tr>
+
+                  <tr>
+                    <td class="tech-name-cell">
+                      <span class="tech-name-text">失礼剣</span>
+                    </td>
+                    <td class="tech-check-cell">
+                      <input type="checkbox" class="chk-gokui" id="gokui-3" aria-label="失礼剣の極意化済チェック">
+                    </td>
+                    <td class="tech-check-cell">
+                      <input type="checkbox" class="chk-main" id="main-3" aria-label="失礼剣を主が閃いたチェック">
+                    </td>
+                  </tr>
+
+                  <tr>
+                    <td class="tech-name-cell">
+                      <span class="tech-name-text">十文字切り</span>
+                    </td>
+                    <td class="tech-check-cell">
+                      <input type="checkbox" class="chk-gokui" id="gokui-4" aria-label="十文字切りの極意化済チェック">
+                    </td>
+                    <td class="tech-check-cell">
+                      <input type="checkbox" class="chk-main" id="main-4" aria-label="十文字切りを主が閃いたチェック">
+                    </td>
+                  </tr>
+
+                  <tr>
+                    <td class="tech-name-cell">
+                      <span class="tech-name-text">飛水断ち</span>
+                    </td>
+                    <td class="tech-check-cell">
+                      <input type="checkbox" class="chk-gokui" id="gokui-5" aria-label="飛水断ちの極意化済チェック">
+                    </td>
+                    <td class="tech-check-cell">
+                      <input type="checkbox" class="chk-main" id="main-5" aria-label="飛水断ちを主が閃いたチェック">
+                    </td>
+                  </tr>
+
+                  <tr>
+                    <td class="tech-name-cell">
+                      <span class="tech-name-text">龍尾返し</span>
+                    </td>
+                    <td class="tech-check-cell">
+                      <input type="checkbox" class="chk-gokui" id="gokui-6" aria-label="龍尾返しの極意化済チェック">
+                    </td>
+                    <td class="tech-check-cell">
+                      <input type="checkbox" class="chk-main" id="main-6" aria-label="龍尾返しを主が閃いたチェック">
+                    </td>
+                  </tr>
+
+                  <tr>
+                    <td class="tech-name-cell">
+                      <span class="tech-name-text">疾風剣</span>
+                    </td>
+                    <td class="tech-check-cell">
+                      <input type="checkbox" class="chk-gokui" id="gokui-7" aria-label="疾風剣の極意化済チェック">
+                    </td>
+                    <td class="tech-check-cell">
+                      <input type="checkbox" class="chk-main" id="main-7" aria-label="疾風剣を主が閃いたチェック">
+                    </td>
+                  </tr>
+
+                  <tr>
+                    <td class="tech-name-cell">
+                      <span class="tech-name-text">バックスタップ</span>
+                    </td>
+                    <td class="tech-check-cell">
+                      <input type="checkbox" class="chk-gokui" id="gokui-8" aria-label="バックスタップの極意化済チェック">
+                    </td>
+                    <td class="tech-check-cell">
+                      <input type="checkbox" class="chk-main" id="main-8" aria-label="バックスタップを主が閃いたチェック">
+                    </td>
+                  </tr>
+
+                  <tr>
+                    <td class="tech-name-cell">
+                      <span class="tech-name-text">亜空間斬り</span>
+                    </td>
+                    <td class="tech-check-cell">
+                      <input type="checkbox" class="chk-gokui" id="gokui-9" aria-label="亜空間斬りの極意化済チェック">
+                    </td>
+                    <td class="tech-check-cell">
+                      <input type="checkbox" class="chk-main" id="main-9" aria-label="亜空間斬りを主が閃いたチェック">
+                    </td>
+                  </tr>
+
+                  <tr>
+                    <td class="tech-name-cell">
+                      <span class="tech-name-text">残像剣</span>
+                    </td>
+                    <td class="tech-check-cell">
+                      <input type="checkbox" class="chk-gokui" id="gokui-10" aria-label="残像剣の極意化済チェック">
+                    </td>
+                    <td class="tech-check-cell">
+                      <input type="checkbox" class="chk-main" id="main-10" aria-label="残像剣を主が閃いたチェック">
+                    </td>
+                  </tr>
+
+                  <tr>
+                    <td class="tech-name-cell">
+                      <span class="tech-name-text">五月雨斬り</span>
+                    </td>
+                    <td class="tech-check-cell">
+                      <input type="checkbox" class="chk-gokui" id="gokui-11" aria-label="五月雨斬りの極意化済チェック">
+                    </td>
+                    <td class="tech-check-cell">
+                      <input type="checkbox" class="chk-main" id="main-11" aria-label="五月雨斬りを主が閃いたチェック">
+                    </td>
+                  </tr>
+
+                  <tr>
+                    <td class="tech-name-cell">
+                      <span class="tech-name-text">分身剣</span>
+                    </td>
+                    <td class="tech-check-cell">
+                      <input type="checkbox" class="chk-gokui" id="gokui-12" aria-label="分身剣の極意化済チェック">
+                    </td>
+                    <td class="tech-check-cell">
+                      <input type="checkbox" class="chk-main" id="main-12" aria-label="分身剣を主が閃いたェック">
+                    </td>
+                  </tr>
+
+                </tbody>
+              </table>
+        </div>
+
+        <!-- HP<=0：分身DMG＋形態X -->
+        <div class="rta-v2-inner-block block-bunshin-pat">
+          <!-- 貼り付け位置:ここから（bunshinpat-box 本体） --><div class="bunshinpat-box">
+
+      <!-- 上部：分身剣想定ダメージ一覧 -->
+      <div class="bunshin-dmg-area">
+
+        <!-- タイトル -->
+        <div class="bunshin-title">分身剣想定ダメージ</div>
+
+        <!-- ① -->
+        <div class="bunshin-entry" data-slot="1">
+          <div class="bunshin-row">
+            <div class="slot-label">①キャラ</div>
+            <div class="dmg-label">最大</div>
+            <div><input type="text" class="dmg-input" id="bun-dmg-max-1" value="0"></div>
+          </div>
+          <div class="bunshin-row">
+            <div class="slot-label">
+              剣レベ<span class="sword-lv" id="bun-sword-lv-1">0</span>
+            </div>
+            <div class="dmg-label">最小</div>
+            <div><input type="text" class="dmg-input" id="bun-dmg-min-1" value="0"></div>
+          </div>
+        </div>
+
+        <!-- ② -->
+        <div class="bunshin-entry" data-slot="2">
+          <div class="bunshin-row">
+            <div class="slot-label">②キャラ</div>
+            <div class="dmg-label">最大</div>
+            <div><input type="text" class="dmg-input" id="bun-dmg-max-2" value="0"></div>
+          </div>
+          <div class="bunshin-row">
+            <div class="slot-label">
+              剣レベ<span class="sword-lv" id="bun-sword-lv-2">0</span>
+            </div>
+            <div class="dmg-label">最小</div>
+            <div><input type="text" class="dmg-input" id="bun-dmg-min-2" value="0"></div>
+          </div>
+        </div>
+
+        <!-- ③ -->
+        <div class="bunshin-entry" data-slot="3">
+          <div class="bunshin-row">
+            <div class="slot-label">③キャラ</div>
+            <div class="dmg-label">最大</div>
+            <div><input type="text" class="dmg-input" id="bun-dmg-max-3" value="0"></div>
+          </div>
+          <div class="bunshin-row">
+            <div class="slot-label">
+              剣レベ<span class="sword-lv" id="bun-sword-lv-3">0</span>
+            </div>
+            <div class="dmg-label">最小</div>
+            <div><input type="text" class="dmg-input" id="bun-dmg-min-3" value="0"></div>
+          </div>
+        </div>
+
+        <!-- ④ -->
+        <div class="bunshin-entry" data-slot="4">
+          <div class="bunshin-row">
+            <div class="slot-label">④キャラ</div>
+            <div class="dmg-label">最大</div>
+            <div><input type="text" class="dmg-input" id="bun-dmg-max-4" value="0"></div>
+          </div>
+          <div class="bunshin-row">
+            <div class="slot-label">
+              剣レベ<span class="sword-lv" id="bun-sword-lv-4">0</span>
+            </div>
+            <div class="dmg-label">最小</div>
+            <div><input type="text" class="dmg-input" id="bun-dmg-min-4" value="0"></div>
+          </div>
+        </div>
+
+        <!-- ⑤ -->
+        <div class="bunshin-entry" data-slot="5">
+          <div class="bunshin-row">
+            <div class="slot-label">⑤キャラ</div>
+            <div class="dmg-label">最大</div>
+            <div><input type="text" class="dmg-input" id="bun-dmg-max-5" value="0"></div>
+          </div>
+          <div class="bunshin-row">
+            <div class="slot-label">
+              剣レベ<span class="sword-lv" id="bun-sword-lv-5">0</span>
+            </div>
+            <div class="dmg-label">最小</div>
+            <div><input type="text" class="dmg-input" id="bun-dmg-min-5" value="0"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 下部：PATTERN X 表示 -->
+      <!-- 破壊するものの形態選択エリア
+           ・中央の四角が左右より大きい構成
+           ・形態10種（強／①〜④／弱／風／火／土／水）をループしながら選択
+           ・破壊ツール側の自動パターン推察とは接続しない -->
+      <div class="patternx-area">
+
+        <!-- 見出し -->
+        <div class="patternx-title">破壊するものの形態</div>
+
+        <!-- 形態選択の表示行
+             [左表示] [左ボタン] [中央表示] [右ボタン] [右表示] の5要素構造 -->
+        <div class="patternx-row patternx-selector">
+          <!-- 左：現在形態の1つ前を表示する小さめのボックス -->
+          <div class="patternx-box patternx-box-sub">
+            <span class="patternx-label patternx-label-sub" id="pattern-x-prev-label">－</span>
+          </div>
+
+          <!-- 左ボタン：1つ左の形態へ移動 -->
+          <button type="button" class="patternx-arrow" id="pattern-x-prev-button">◀</button>
+
+          <!-- 中央：現在選択中の形態を表示する大きいボックス -->
+          <div class="patternx-box patternx-box-main">
+            <span class="patternx-label patternx-label-main" id="pattern-x-current-label">未</span>
+          </div>
+
+          <!-- 右ボタン：1つ右の形態へ移動 -->
+          <button type="button" class="patternx-arrow" id="pattern-x-next-button">▶</button>
+
+          <!-- 右：現在形態の1つ後を表示する小さめのボックス -->
+          <div class="patternx-box patternx-box-sub">
+            <span class="patternx-label patternx-label-sub" id="pattern-x-next-label">－</span>
+          </div>
+        </div>
+
+        <div class="patternx-row patternx-hp-row">
+         <span class="patternx-hp-label">獣魔形態HP</span>
+         <span class="patternx-hp-value" id="pattern-x-hp-value">-</span>
+        </div>
+
+        <!-- 形態定義リスト（内部用）
+             ・このリストの順番が currentIndex(0〜9) の順番と一致する
+             ・data-symbol に画面表示用の1文字ラベル（強・①〜④・弱・風・火・土・水）
+             ・data-name に元の名称（闇（強）など）を保持する -->
+        <ul class="patternx-def-list" id="pattern-x-def-list">
+          <li data-index="0" data-symbol="闇強" data-name="闇（強）">闇（強）</li>
+          <li data-index="1" data-symbol="①" data-name="形態1">形態1</li>
+          <li data-index="2" data-symbol="②" data-name="形態2">形態2</li>
+          <li data-index="3" data-symbol="③" data-name="形態3">形態3</li>
+          <li data-index="4" data-symbol="④" data-name="形態4">形態4</li>
+          <li data-index="5" data-symbol="闇弱" data-name="闇（弱）">闇（弱）</li>
+          <li data-index="6" data-symbol="蒼龍" data-name="獣魔・蒼龍">獣魔・蒼龍</li>
+          <li data-index="7" data-symbol="朱鳥" data-name="獣魔・朱鳥">獣魔・朱鳥</li>
+          <li data-index="8" data-symbol="白虎" data-name="獣魔・白虎">獣魔・白虎</li>
+          <li data-index="9" data-symbol="玄武" data-name="獣魔・玄武">獣魔・玄武</li>
+        </ul>
+
+        <!-- 開発メモ：
+             ・currentIndex は 0〜9 の整数で、このリストの data-index と対応させる。
+               0: 闇（強）、1: 形態1、…、9: 獣魔・玄武
+             ・ラベルの更新ルール（JavaScript側）：
+               - 中央: currentIndex の data-symbol を pattern-x-current-label に表示（色は黒）
+               - 左  : (currentIndex - 1 + 10) % 10 の data-symbol を pattern-x-prev-label に表示（色は灰色）
+               - 右  : (currentIndex + 1) % 10 の data-symbol を pattern-x-next-label に表示（色は灰色）
+             ・色分けは CSS 側で
+               - .patternx-label-main を黒
+               - .patternx-label-sub を灰色
+               として指定している。 -->
+      </div>
+
+    </div>
+          <!-- 貼り付け位置:ここまで -->
+        </div>
+  `;
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+  initRightTecBox("rta-v2-top-right");
+});
+
+  </script>
+  <script>
+// bunshin_sword_99.js
+// ======================================
+// RS3 分身剣ダメージ計算（RTA用・簡略版）
+//
+// ■前提（内部注釈・画面には出さない想定）
+//   - 直前行動は 99 固定（今回は仕様として 99 決め打ち）
+//   - 命中判定は全て「命中する」前提（＝全ヒット時のダメージ）
+//   - Ultimagarden / calc.js の「分身技」(type 2) ロジックをベース
+//   - 増幅(術レベル / 陣形 / 装備 / シャドウ等) はすべて無し扱い
+//
+// 返り値は「防御・体力で軽減後」の min/max/avg（期待値）とヒット数。
+// ======================================
+
+(function (global) {
+  "use strict";
+
+  // Math.floor のショートカット（calc.js の M と同じ役割）
+  function M(x) {
+    return Math.floor(x);
+  }
+
+  // 剣クラス用 C値テーブル（lv 0〜50）
+  // 元: calc.js の cc[lv][1] をそのまま抽出
+  const RS3_SWORD_C = [
+    // lv:  0,  1,  2,  3,  4,  5,  6,  7,  8,  9
+    2,   3,  3,  4,  4,  5,  6,  6,  7,  7,
+    // lv: 10, 11, 12, 13, 14, 15, 16, 17, 18, 19
+    8,   9,  9, 10, 10, 11, 12, 12, 13, 13,
+    // lv: 20, 21, 22, 23, 24, 25, 26, 27, 28, 29
+    14, 15, 15, 16, 16, 17, 18, 19, 19, 20,
+    // lv: 30, 31, 32, 33, 34, 35, 36, 37, 38, 39
+    21, 22, 22, 23, 24, 25, 26, 26, 27, 27,
+    // lv: 40, 41, 42, 43, 44, 45, 46, 47, 48, 49
+    27, 27, 28, 28, 28, 28, 29, 29, 29, 29,
+    // lv: 50
+    35
+  ];
+
+  /**
+   * 分身剣ダメージ計算（剣専用）
+   *
+   * params = {
+   *   lv:   技レベル(0〜50),
+   *   wea:  武器攻撃力,
+   *   def:  敵のDEF(斬防),
+   *   vit:  敵のVIT,
+   *   // 以降は分身剣特有パラメータ（省略可・デフォルトは分身剣想定）
+   *   prev: 直前行動パラメータ（省略時は 99 固定）,
+   *   base: 基礎ダメージ $kiso   （デフォルト 8）,
+   *   sei:  成長度       $sei    （デフォルト 1 = 分身剣用）
+   * }
+   *
+   * 返り値:
+   * {
+   *   min:  最小ダメージ（乱数・多段・DEF/VIT軽減後）,
+   *   max:  最大ダメージ,
+   *   avg:  平均ダメージ（(min+max)/2）,
+   *   hits: ヒット数 n
+   * }
+   */
+  function calcBunshinkenDamage(params) {
+    const lv  = (params.lv  | 0);
+    const wea = (params.wea | 0);
+    const def = (params.def | 0);
+    const vit = (params.vit | 0);
+
+    // ★直前行動は 99 固定前提（指定が無ければ 99）
+    const prev = (params.prev != null ? (params.prev | 0) : 99);
+
+    // ★分身剣固有のパラメータ（kiso=8, sei=1 が Ultimagarden のリストと一致）
+    const base = (params.base != null ? (params.base | 0) : 8);
+    const sei  = (params.sei  != null ? (params.sei  | 0) : 1);
+
+    // lv を 0〜50 にクランプして C値取得（剣専用）
+    const lvClamped = Math.max(0, Math.min(50, lv));
+    const c = RS3_SWORD_C[lvClamped];
+
+    let epar = 0;
+    let ewea = 0;
+
+    if (prev > 20)        epar = prev - 19;
+    if (wea > M(def / 2)) ewea = wea - M(def / 2);
+
+    // ---- calc.js の case 2（分身技）のロジック ----
+    let d1 = base;
+
+    // d1 += M( ( $c*$prev + M( $c*(50-$c)/8 ) )/4 ) * 3;
+    d1 += M((c * prev + M(c * (50 - c) / 8)) / 4) * 3;
+
+    // d1 += M( (3 + $c + M($epar/2) )*$ewea/2 );
+    d1 += M((3 + c + M(epar / 2)) * ewea / 2);
+
+    // ここまでで「乱数なし 1ヒット分の土台ダメージ」
+
+    // ---- 乱数幅（min/max） ----
+    let dMin = d1;
+    let dMax = d1;
+
+    if (lvClamped > 0) {
+      dMin += 1;
+      dMax += lvClamped * 3;
+    }
+
+    // ---- 分身技のヒット数 n ----
+    let n;
+    if (sei > 0 && sei !== 3) {
+      // n = M($lv/$sei/10) + $sei; （分身剣なら sei=1 → n = floor(lv/10)+1）
+      n = M(lvClamped / sei / 10) + sei;
+    } else if (sei === 3) {
+      // n = M($lv/18) + 2;
+      n = M(lvClamped / 18) + 2;
+    } else {
+      n = 1;
+    }
+
+    // if($type == 2) { d1 *= n; d2 *= n; } の部分
+    dMin *= n;
+    dMax *= n;
+
+    // ---- DEF/VIT 軽減（defe 相当）----
+    function applyDefVit(d) {
+      // d = M( d * (128 - $def - M($vit/2) )/128 ) - $def*2;
+      d = M(d * (128 - def - M(vit / 2)) / 128) - def * 2;
+      if (d > 9999) return 9999;
+      if (d < 0)    return 0;
+      return d;
+    }
+
+    const minAfter = applyDefVit(dMin);
+    const maxAfter = applyDefVit(dMax);
+    const avg      = (minAfter + maxAfter) / 2;
+
+    return {
+      min:  minAfter,
+      max:  maxAfter,
+      avg:  avg,
+      hits: n
+    };
+  }
+
+  // グローバルに公開（必要に応じて名前は変えてOK）
+  global.bunshin_sword_99 = {
+    SWORD_C: RS3_SWORD_C,
+    calcDamage: calcBunshinkenDamage
+  };
+
+})(typeof window !== "undefined" ? window : this);
+
+  </script>
+  <script>
+// rs3_box_bunshin_pat_v2.js
+// ------------------------------------------------------------
+// 分身剣想定ダメージ＋形態X ブロック専用スクリプト
+//
+// 役割：
+//   1) 「破壊するものの形態」UI（patternX）の状態管理
+//      - 現在選択している形態インデックス（0〜9）の保持
+//      - 中央ラベル＋左右ラベル＋「現在：○」表示の更新
+//   2) 分身剣想定ダメージ（最小／最大）の計算ラッパー
+//      - 計算本体は bunshin_sword_99.js に委譲
+//      - 剣レベル・敵 vit・敵斬防が指定されない場合のデフォルト補完
+//      - 陣形補正（前列／後列）を最小・最大の両方に適用
+//
+// 前提：
+//   - HTML 側で bunshin_sword_99.js の後に読み込まれること。
+//   - ①〜⑤の入力欄：
+//       bun-dmg-max-1〜5, bun-dmg-min-1〜5, bun-sword-lv-1〜5
+//   - 形態X 表示：
+//       .patternx-area 内に id="pattern-x-value" が存在すること
+//     （prev/next のラベルやボタンは、あれば連携／なければスキップ）
+//
+// 丸め規則：
+//   - bunshin_sword_99.js と揃えて
+//       ・割り算を行うたびに Math.floor で小数点以下切り捨て
+//       ・平方根をとるときも Math.floor
+//   - 陣形補正 1.25 倍は「×5 → ÷4 → floor」で実装
+// ------------------------------------------------------------
+(function (global) {
+  "use strict";
+
+  // ==========================================================
+  // 1. 形態X（破壊するものの形態）管理
+  // ==========================================================
+
+  /**
+   * 形態10種の定義
+   *
+   * index 対応：
+   *   0: 闇（強）   → 表記: 闇強
+   *   1: 形態1      → 表記: ①
+   *   2: 形態2      → 表記: ②
+   *   3: 形態3      → 表記: ③
+   *   4: 形態4      → 表記: ④
+   *   5: 闇（弱）   → 表記: 闇弱
+   *   6: 獣魔・蒼龍 → 表記: 蒼龍
+   *   7: 獣魔・朱鳥 → 表記: 朱鳥
+   *   8: 獣魔・白虎 → 表記: 白虎
+   *   9: 獣魔・玄武 → 表記: 玄武
+   *
+   * vit / slash は「敵データ(順番付き).txt」から抽出した値。
+   */
+  const PATTERN_LIST = [
+    // 0: 闇の翼（強）
+    { index: 0, code: "dark-strong", symbol: "闇強", label: "破壊するもの(闇の翼:強)",   vit: 50, slash: 28 },
+    // 1〜4: 通常形態1〜4
+    { index: 1, code: "normal-1",    symbol: "①",   label: "破壊するもの(普通1)",       vit: 45, slash: 45 },
+    { index: 2, code: "normal-2",    symbol: "②",   label: "破壊するもの(普通2)",       vit: 46, slash: 33 },
+    { index: 3, code: "normal-3",    symbol: "③",   label: "破壊するもの(普通3)",       vit: 40, slash: 28 },
+    { index: 4, code: "normal-4",    symbol: "④",   label: "破壊するもの(普通4)",       vit: 40, slash: 23 },
+    // 5: 闇の翼（弱）
+    { index: 5, code: "dark-weak",   symbol: "闇弱", label: "破壊するもの(闇の翼:弱)",   vit: 35, slash: 11 },
+  // 6〜9: 獣魔4体
+  { index: 6, code: "beast-wind",  symbol: "蒼龍", label: "破壊するもの(獣魔:蒼龍)",   vit: 40, slash: 20, hp: 14000 },
+  { index: 7, code: "beast-fire",  symbol: "朱鳥", label: "破壊するもの(獣魔:朱鳥)",   vit: 35, slash: 16, hp: 12000 },
+  { index: 8, code: "beast-earth", symbol: "白虎", label: "破壊するもの(獣魔:白虎)",   vit: 50, slash: 22, hp: 16000 },
+  { index: 9, code: "beast-water", symbol: "玄武", label: "破壊するもの(獣魔:玄武)",   vit: 50, slash: 24, hp: 18000 }
+];
+
+
+  // 現在の形態インデックス（0〜9）※初期値は 1（①：形態1）
+  let currentPatternIndex = 1;
+
+  // DOM要素（存在しない場合は null のまま）
+  let prevLabelEl    = null;
+  let currentLabelEl = null;
+  let nextLabelEl    = null;
+  let prevButtonEl   = null;
+  let nextButtonEl   = null;
+  let valueLabelEl   = null; // 「現在：○」の値（pattern-x-value）
+  let hpValueEl      = null; // 獣魔形態HP表示用（pattern-x-hp-value）
+
+  /**
+   * インデックスを 0〜PATTERN_LIST.length-1 の範囲に正規化（ループ）する。
+   */
+  function normalizePatternIndex(idx) {
+    const n = PATTERN_LIST.length;
+    if (n === 0) return 0;
+    const r = ((idx % n) + n) % n;
+    return r;
+  }
+
+  /**
+   * 指定インデックスの形態情報を取得する。
+   */
+  function getPatternByIndex(idx) {
+    const fixed = normalizePatternIndex(idx);
+    return PATTERN_LIST[fixed] || null;
+  }
+
+  /**
+   * 現在の形態情報を取得する。
+   */
+  function getCurrentPattern() {
+    return getPatternByIndex(currentPatternIndex);
+  }
+
+  /**
+   * 現在インデックスを指定値に設定する。
+   */
+  function setPatternIndex(idx) {
+    currentPatternIndex = normalizePatternIndex(idx);
+    updatePatternDisplay();
+  }
+
+  /**
+   * 現在インデックスを相対的に移動する（-1, +1 など）。
+   */
+  function shiftPattern(delta) {
+    setPatternIndex(currentPatternIndex + delta);
+  }
+
+  /**
+   * 形態選択UIのラベル表示を更新する。
+   * - 左右ラベル（前後の形態）
+   * - 中央ラベル（現在の形態）
+   * - 「現在：○」の表示（pattern-x-value）があればそこも同期
+   */
+function updatePatternDisplay() {
+  const cur  = getPatternByIndex(currentPatternIndex);
+  const prev = getPatternByIndex(currentPatternIndex - 1);
+  const next = getPatternByIndex(currentPatternIndex + 1);
+
+  if (currentLabelEl && cur) {
+    currentLabelEl.textContent = cur.symbol;
+  }
+  if (prevLabelEl && prev) {
+    prevLabelEl.textContent = prev.symbol;
+  }
+  if (nextLabelEl && next) {
+    nextLabelEl.textContent = next.symbol;
+  }
+  if (valueLabelEl && cur) {
+    valueLabelEl.textContent = cur.symbol;
+  }
+
+  // ★ここから獣魔形態HPの表示（関数の内側）
+  if (hpValueEl) {
+    if (cur && typeof cur.hp === "number" && cur.hp > 0) {
+      hpValueEl.textContent = String(cur.hp);
+    } else {
+      // 獣魔形態以外や hp 未設定時は「-」
+      hpValueEl.textContent = "-";
+    }
+  }
+}
+
+
+
+  /**
+   * 形態選択UIの初期化。
+   * - .patternx-area が無ければ何もしない。
+   * - prev/next のラベルやボタンが無い場合は、その部分だけスキップ。
+   */
+  function initPatternUI() {
+    const area = document.querySelector(".patternx-area");
+    if (!area) return;
+
+    prevLabelEl    = document.getElementById("pattern-x-prev-label")   || null;
+    currentLabelEl = document.getElementById("pattern-x-current-label")|| null;
+    nextLabelEl    = document.getElementById("pattern-x-next-label")   || null;
+    prevButtonEl   = document.getElementById("pattern-x-prev-button")  || null;
+    nextButtonEl   = document.getElementById("pattern-x-next-button")  || null;
+    valueLabelEl   = document.getElementById("pattern-x-value")        || null;
+    hpValueEl      = document.getElementById("pattern-x-hp-value")     || null;
+
+    // 初期値：1（①：形態1）
+    currentPatternIndex = 1;
+    updatePatternDisplay();
+
+    if (prevButtonEl) {
+      prevButtonEl.addEventListener("click", function () {
+        shiftPattern(-1);
+      });
+    }
+    if (nextButtonEl) {
+      nextButtonEl.addEventListener("click", function () {
+        shiftPattern(+1);
+      });
+    }
+  }
+
+  /**
+   * 現在の形態インデックスに対応する敵パラメータ（vit / def）を取得する。
+   * overrideIndex が指定されていれば、そのインデックスを優先。
+   */
+  function getEnemyParamsForPattern(overrideIndex) {
+    const idx = (typeof overrideIndex === "number")
+      ? normalizePatternIndex(overrideIndex)
+      : currentPatternIndex;
+
+    const pat = PATTERN_LIST[idx];
+    if (!pat) {
+      // 念のためのフォールバック：普通1形態
+      return { vit: 45, def: 45 };
+    }
+    return { vit: pat.vit, def: pat.slash };
+  }
+
+  // ==========================================================
+  // 2. 分身剣ダメージ計算ラッパー
+  // ==========================================================
+
+  /**
+   * 分身剣ダメージ計算のデフォルト値。
+   */
+  const BUNSHIN_DEFAULTS = {
+    weaponLv: 20, // 親から剣レベルが届かないときのデフォルト剣レベル
+    attack:   25  // bunshin_sword_99 に渡す wea（武器攻撃力）
+  };
+
+  /**
+   * 陣形補正の既定行（前列／後列）。
+   *   - true  : 前列（陣形補正あり）
+   *   - false : 後列（補正なし）
+   *
+   * ①〜③：前列、④〜⑤：後列 という前提。
+   */
+  const FRONT_SLOTS = [true, true, true, false, false];
+
+  /**
+   * 数値変換ヘルパー。
+   * 数値でなければ null を返す。
+   */
+  function toIntOrNull(value) {
+    if (value == null || value === "") return null;
+    const n = Number(value);
+    if (!Number.isFinite(n)) return null;
+    return n | 0;
+  }
+
+  /**
+   * スロット番号 1〜5 かどうか。
+   */
+  function isValidSlot(slotNo) {
+    return Number.isInteger(slotNo) && slotNo >= 1 && slotNo <= 5;
+  }
+
+  /**
+   * 陣形補正を適用する。
+   * - isFront が true のときだけ係数 1.25 倍を適用する。
+   * - 計算規則に合わせて、「割り算ごとに切り捨て」を行う。
+   *
+   * ここでは 1.25 = 5 / 4 として
+   *   tmp = value * 5;
+   *   result = floor(tmp / 4);
+   * で実装。
+   */
+  function applyFormationBonus(value, isFront) {
+    if (!isFront) {
+      return value;
+    }
+    const tmp = value * 5;              // 掛け算部分
+    const result = Math.floor(tmp / 4); // 割り算のタイミングで切り捨て
+    return result;
+  }
+
+  /**
+   * スロット番号から前列／後列を判定するヘルパー。
+   * @param {number} slotNo 1〜5
+   * @returns {boolean}
+   */
+  function isFrontSlot(slotNo) {
+    if (!isValidSlot(slotNo)) return false;
+    return !!FRONT_SLOTS[slotNo - 1];
+  }
+
+  /**
+   * 指定スロットのダメージ欄（最大／最小）をクリアする。
+   */
+  function clearSlotDamage(slotNo) {
+    if (!isValidSlot(slotNo)) return;
+    const maxInput = document.getElementById("bun-dmg-max-" + slotNo);
+    const minInput = document.getElementById("bun-dmg-min-" + slotNo);
+    if (maxInput) maxInput.value = "";
+    if (minInput) minInput.value = "";
+  }
+
+  /**
+   * 分身剣ダメージを計算する（1スロット分の内部処理）。
+   *
+   * options:
+   *   - swordLevel : 剣レベル（省略時 20）
+   *   - weaponPower: 武器攻撃力（省略時 25）
+   *   - enemyDef   : 敵斬防（省略時：現在の形態から取得）
+   *   - enemyVit   : 敵体力（省略時：現在の形態から取得）
+   *   - isFront    : true=前列 / false=後列（省略時：スロット番号から判定）
+   *
+   * 戻り値:
+   *   - { min, max, avg, hits } / 計算不能の場合 null
+   */
+  function calcDamageFromOptions(options, slotNoForDefaultRow) {
+    if (!global.bunshin_sword_99 || typeof global.bunshin_sword_99.calcDamage !== "function") {
+      console.warn("[rs3_box_bunshin_pat_v2] bunshin_sword_99.calcDamage が見つかりません。bunshin_sword_99.js の読み込みを確認してください。");
+      return null;
+    }
+    if (!options) options = {};
+
+    // 剣レベル
+    let lv = toIntOrNull(options.swordLevel);
+    if (lv == null) {
+      lv = BUNSHIN_DEFAULTS.weaponLv;
+    }
+
+    // 武器攻撃力
+    let wea = toIntOrNull(options.weaponPower);
+    if (wea == null) {
+      wea = BUNSHIN_DEFAULTS.attack;
+    }
+
+    // 敵防御＆体力
+    let def = toIntOrNull(options.enemyDef);
+    let vit = toIntOrNull(options.enemyVit);
+    if (def == null || vit == null) {
+      const p = getEnemyParamsForPattern();
+      if (def == null) def = p.def;
+      if (vit == null) vit = p.vit;
+    }
+
+    // どれか欠けていれば計算しない
+    if (lv == null || wea == null || def == null || vit == null) {
+      return null;
+    }
+
+    // 分身剣本体ロジックの呼び出し
+    const result = global.bunshin_sword_99.calcDamage({
+      lv:  lv,
+      wea: wea,
+      def: def,
+      vit: vit
+      // prev / base / sei は bunshin_sword_99 側の既定値に任せる
+    });
+
+    if (!result || typeof result.min !== "number" || typeof result.max !== "number") {
+      return null;
+    }
+
+    // 前列／後列の判定
+    let isFront;
+    if (typeof options.isFront === "boolean") {
+      isFront = options.isFront;
+    } else if (isValidSlot(slotNoForDefaultRow)) {
+      isFront = !!FRONT_SLOTS[slotNoForDefaultRow - 1];
+    } else {
+      isFront = false;
+    }
+
+    // 陣形補正を「最小」「最大」の両方に適用する
+    const minBase = result.min;
+    const maxBase = result.max;
+
+    const minFinal = applyFormationBonus(minBase, isFront);
+    const maxFinal = applyFormationBonus(maxBase, isFront);
+
+    return {
+      min:  minFinal,
+      max:  maxFinal,
+      avg:  result.avg,   // 平均値は bunshin_sword_99 側そのまま（必要なら後で検討）
+      hits: result.hits
+    };
+  }
+
+  /**
+   * 外部向け：分身剣ダメージ（最小／最大）を計算し、陣形補正を適用した値を返す。
+   *
+   * @param {Object} options calcDamageFromOptions と同等
+   * @param {number} slotNo 1〜5（isFront 未指定時のデフォルト判定に利用）
+   * @returns {Object|null} { min, max, avg, hits }
+   */
+  function computeDamageRange(options, slotNo) {
+    return calcDamageFromOptions(options, slotNo);
+  }
+
+  /**
+   * スロット1つ分の「剣レベル表示」と「最小／最大ダメージ」を更新する。
+   *
+   * @param {number} slotNo 1〜5
+   * @param {Object} options calcDamageFromOptions と同等
+   */
+  function setSlot(slotNo, options) {
+    if (!isValidSlot(slotNo)) {
+      console.warn("[rs3_box_bunshin_pat_v2] slotNo が 1〜5 の範囲外です:", slotNo);
+      return;
+    }
+
+    // 剣レベル表示（bun-sword-lv-N）
+    const swordLvSpan = document.getElementById("bun-sword-lv-" + slotNo);
+    if (swordLvSpan && options && options.swordLevel != null) {
+      const lv = toIntOrNull(options.swordLevel);
+      swordLvSpan.textContent = (lv != null ? String(lv) : "0");
+    }
+
+    const dmg = calcDamageFromOptions(options, slotNo);
+    const maxInput = document.getElementById("bun-dmg-max-" + slotNo);
+    const minInput = document.getElementById("bun-dmg-min-" + slotNo);
+
+    if (!maxInput && !minInput) {
+      return;
+    }
+
+    if (!dmg) {
+      if (maxInput) maxInput.value = "";
+      if (minInput) minInput.value = "";
+      return;
+    }
+
+    if (maxInput) maxInput.value = String(dmg.max);
+    if (minInput) minInput.value = String(dmg.min);
+  }
+
+  /**
+   * 全スロットをまとめて更新するヘルパー。
+   * optionsList は長さ5の配列を想定（欠けていてもよい）。
+   */
+  function setAllSlots(optionsList) {
+    if (!Array.isArray(optionsList)) return;
+    for (let i = 0; i < 5; i++) {
+      const slotNo = i + 1;
+      setSlot(slotNo, optionsList[i]);
+    }
+  }
+
+  /**
+   * 全スロットのダメージ欄をクリアする。
+   */
+  function clearAllSlots() {
+    for (let i = 1; i <= 5; i++) {
+      clearSlotDamage(i);
+    }
+  }
+
+  // ==========================================================
+  // 3. DOM初期化と公開API
+  // ==========================================================
+
+  document.addEventListener("DOMContentLoaded", function () {
+    // 形態選択UIの初期化
+    initPatternUI();
+    // ダメージ部分は、親側から setSlot / setAllSlots を呼んでもらう前提。
+  });
+
+  // 親側（RTA本体など）から呼び出すための公開API
+  global.rs3_box_bunshin_pat_v2 = {
+    // 形態X関連
+    patternList: PATTERN_LIST,
+    getCurrentPattern: getCurrentPattern,
+    setPatternIndex: setPatternIndex,
+    shiftPattern: shiftPattern,
+
+    // 分身ダメージ関連
+    applyFormationBonus: applyFormationBonus,
+    isFrontSlot: isFrontSlot,
+    computeDamageRange: computeDamageRange,
+    setSlot: setSlot,
+    setAllSlots: setAllSlots,
+    clearSlot: clearSlotDamage,
+    clearAllSlots: clearAllSlots
+  };
+
+  })(typeof window !== "undefined" ? window : this);
+
+  </script>
+  <script>
+// rs3_box_fb_v2.js
+// ------------------------------------------------------------
+// フォル＆ビュネ HP ブロック専用スクリプト（v2）
+//
+// 役割：
+//  1) フォルネウス／ビューネイのHP管理
+//     - 最大HPを基準に、ダメージ入力ごとに残りHPを更新
+//     - 残りHPの履歴管理（リターン用）
+//     - 直前ダメージの表示（4桁ゼロ埋め）
+//  2) HP0判定による画面レイアウト切り替え
+//     - フォル残りHP <= 0 かつ ビュネ残りHP <= 0 のとき
+//       #rta-v2-root のクラスを layout-hp-zero に切り替え
+//     - それ以外のとき layout-hp-normal に戻す
+//
+// 対象要素（ID）:
+//  - フォル側:
+//      forneus-max-hp        : 最大HP表示（初期値 28000）
+//      forneus-damage        : ダメージ入力テキスト
+//      forneus-remaining     : 残りHP表示
+//      forneus-last-damage   : 直前ダメージ表示
+//      forneus-reset         : リセットボタン
+//      forneus-return        : リターンボタン
+//  - ビュネ側:
+//      byunei-max-hp         : 最大HP表示（初期値 9000）
+//      byunei-damage         : ダメージ入力テキスト
+//      byunei-remaining      : 残りHP表示
+//      byunei-last-damage    : 直前ダメージ表示
+//      byunei-reset          : リセットボタン
+//      byunei-return         : リターンボタン
+//
+// 注意:
+//  - このスクリプトは、bunshin_sword_99.js など他のJSとは独立して動作する。
+//  - #rta-v2-root が存在しない単体HTMLで開いた場合、HP計算のみ動作し、
+//    レイアウトクラスの切り替えはスキップされる。
+// ------------------------------------------------------------
+(function (global) {
+  "use strict";
+
+  // ==========================================================
+  // 1. レイアウト切り替え：HP変更時に呼び出される関数
+  // ==========================================================
+
+  /**
+   * フォル／ビュネの残りHPから、「HP>0モード／HP0モード」を判定し、
+   * #rta-v2-root のクラスを layout-hp-normal / layout-hp-zero のどちらかに切り替える。
+   *
+   * 判定ルール:
+   *   - forneus-remaining <= 0 かつ byunei-remaining <= 0 のとき HP0モード
+   *   - 上記以外は HP>0モード
+   */
+  function onBossHPChanged() {
+    const forneusRemainEl = document.getElementById("forneus-remaining");
+    const byuneiRemainEl  = document.getElementById("byunei-remaining");
+    const root            = document.getElementById("rta-v2-root");
+
+    // 必須要素のいずれかが無ければ何もしない
+    if (!forneusRemainEl || !byuneiRemainEl || !root) {
+      return;
+    }
+
+    // テキストから数値に変換（数値化できない場合は 0 とみなす）
+    const f = Number(forneusRemainEl.textContent) || 0;
+    const b = Number(byuneiRemainEl.textContent)  || 0;
+
+    if (f <= 0 && b <= 0) {
+      // HP0モード：layout-hp-zero のみ付与
+      root.classList.add("layout-hp-zero");
+      root.classList.remove("layout-hp-normal");
+    } else {
+      // 通常モード：layout-hp-normal のみ付与
+      root.classList.add("layout-hp-normal");
+      root.classList.remove("layout-hp-zero");
+    }
+  }
+
+  // ==========================================================
+  // 2. 直前ダメージ用の表示フォーマット
+  // ==========================================================
+
+  /**
+   * 直前ダメージの表示用に、4桁ゼロ埋めなどを行う。
+   * - 0 以下や数値変換できない場合は "0000"
+   * - 10000 以上はそのまま文字列化
+   * - それ以外は 4桁ゼロ埋め（例: 123 → "0123"）
+   */
+  function formatLastDamage(value) {
+    const n = Number(value);
+    if (!Number.isFinite(n) || n <= 0) {
+      return "0000";
+    }
+    const intVal = Math.floor(n);
+    if (intVal >= 10000) {
+      return String(intVal);
+    }
+    return String(intVal).padStart(4, "0");
+  }
+
+  // ==========================================================
+  // 3. ボスHP計算ロジック（フォル／ビュネ共通）
+  // ==========================================================
+
+  /**
+   * ボスHPの入力欄に対して、
+   *   - Enterキーによるダメージ確定と残りHP減算
+   *   - リセットボタンによる初期化
+   *   - リターンボタンによる一手戻し
+   * をセットアップするユーティリティ。
+   *
+   * @param {string} inputId       ダメージ入力欄のID
+   * @param {string} remainingId   残りHP表示欄のID
+   * @param {number} initialMaxHP  最大HP（初期残りHP＝この値）
+   * @param {string} resetId       リセットボタンのID
+   * @param {string} returnId      リターンボタンのID
+   * @param {string} lastDamageId  直前ダメージ表示欄のID（不要なら null）
+   *
+   * @returns {object|null} APIオブジェクト
+   *   - setMaxHP(newMaxHP): 最大HPを変更し、残りHPと履歴をリセット
+   */
+  function setupBossEnterDamage(inputId, remainingId, initialMaxHP, resetId, returnId, lastDamageId) {
+    const input      = document.getElementById(inputId);
+    const remainSpan = document.getElementById(remainingId);
+    const resetBtn   = document.getElementById(resetId);
+    const returnBtn  = document.getElementById(returnId);
+    const lastDmgSpan = lastDamageId ? document.getElementById(lastDamageId) : null;
+
+    // 入力欄または残りHP欄が無ければセットアップを行わない
+    if (!input || !remainSpan) {
+      return null;
+    }
+
+    // 最大HP・残りHP・履歴の初期化
+    let maxHP    = initialMaxHP;
+    let remaining = maxHP;
+    let history   = [maxHP]; // 残りHPの履歴（先頭が初期値）
+    let dmgHistory = [];     // 入力ダメージの履歴
+
+    // 初期表示
+    remainSpan.textContent = remaining;
+    onBossHPChanged();
+    if (lastDmgSpan) {
+      lastDmgSpan.textContent = formatLastDamage(0);
+    }
+
+    // 入力中に数字以外が入らないようにクリーニング（マイナス記号は許可）
+    input.addEventListener("input", function () {
+      const cleaned = input.value.replace(/[^\d-]/g, "");
+      if (cleaned !== input.value) {
+        input.value = cleaned;
+      }
+    });
+
+    // Enterキーでダメージ確定 → 残りHP減算／回復
+    input.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") {
+        e.preventDefault();
+
+        const cleaned = input.value.replace(/[^\d-]/g, "");
+        if (cleaned === "") return;
+
+        const dmg = Number(cleaned);
+        // 数値でないものと「0」は無効。それ以外（正・負）は有効。
+        if (!Number.isFinite(dmg) || dmg === 0) {
+          input.value = "";
+          return;
+        }
+
+        // 正の値：ダメージ
+        // 負の値：回復（ただし 0 ～ maxHP の範囲にクランプ）
+        let next = remaining - dmg;  // dmg<0 のときは増える
+        if (next < 0) {
+          next = 0;
+        } else if (next > maxHP) {
+          next = maxHP;
+        }
+        remaining = next;
+
+        history.push(remaining);
+        dmgHistory.push(dmg);
+
+        remainSpan.textContent = remaining;
+        onBossHPChanged();
+
+        if (lastDmgSpan) {
+          lastDmgSpan.textContent = formatLastDamage(dmg);
+        }
+
+        input.value = "";
+
+      }
+    });
+
+
+    // リターンボタン：一手前の残りHPに戻す
+    if (returnBtn) {
+      returnBtn.addEventListener("click", function () {
+        if (history.length > 1) {
+          // 最新の履歴を1つ削除し、直前の値を現在値とする
+          history.pop();
+          remaining = history[history.length - 1];
+          remainSpan.textContent = remaining;
+          onBossHPChanged();
+
+          if (dmgHistory.length > 0) {
+            dmgHistory.pop();
+          }
+          const last = dmgHistory.length > 0 ? dmgHistory[dmgHistory.length - 1] : 0;
+          if (lastDmgSpan) {
+            lastDmgSpan.textContent = formatLastDamage(last);
+          }
+        }
+      });
+    }
+
+    // 外部から最大HPを変更するためのAPI
+    return {
+      /**
+       * 最大HPを変更し、残りHPと履歴をリセットする。
+       * @param {number} newMaxHP
+       */
+      setMaxHP: function (newMaxHP) {
+        const n = Number(newMaxHP);
+        if (!Number.isFinite(n) || n <= 0) {
+          return;
+        }
+        maxHP    = Math.floor(n);
+        remaining = maxHP;
+        history   = [maxHP];
+        dmgHistory = [];
+
+        remainSpan.textContent = remaining;
+        onBossHPChanged();
+
+        if (lastDmgSpan) {
+          lastDmgSpan.textContent = formatLastDamage(0);
+        }
+
+        input.value = "";
+      }
+    };
+  }
+
+  // ==========================================================
+  // 4. DOMContentLoaded 時の初期化
+  // ==========================================================
+
+  document.addEventListener("DOMContentLoaded", function () {
+    // フォル／ビュネの最大HPは、基本的に画面上の表示値から取得する。
+    // 取得できない場合はデフォルト値 28000 / 9000 を使用する。
+
+    let forneusMax = 28000;
+    let byuneiMax  = 9000;
+
+    // お供レベル補正の「基礎HP」を保持しておく変数
+    let baseForneusMax = forneusMax;
+    let baseByuneiMax  = byuneiMax;
+
+    const forneusMaxSpan = document.getElementById("forneus-max-hp");
+    if (forneusMaxSpan) {
+      const v = Number(forneusMaxSpan.textContent.replace(/[^\d]/g, ""));
+      if (Number.isFinite(v) && v > 0) {
+        forneusMax = Math.floor(v);
+      }
+    }
+    // 画面上から最終的に決まった値を基礎HPとして採用
+    baseForneusMax = forneusMax;
+
+    const byuneiMaxSpan = document.getElementById("byunei-max-hp");
+    if (byuneiMaxSpan) {
+      const v = Number(byuneiMaxSpan.textContent.replace(/[^\d]/g, ""));
+      if (Number.isFinite(v) && v > 0) {
+        byuneiMax = Math.floor(v);
+      }
+    }
+    // 画面上から最終的に決まった値を基礎HPとして採用
+    baseByuneiMax = byuneiMax;
+
+
+    // フォル／ビュネのHP入力欄に対して、Enter・リセット・リターンの挙動を設定
+    const forneusAPI = setupBossEnterDamage(
+      "forneus-damage",
+      "forneus-remaining",
+      forneusMax,
+      "forneus-reset",
+      "forneus-return",
+      "forneus-last-damage"
+    );
+
+    const byuneiAPI = setupBossEnterDamage(
+      "byunei-damage",
+      "byunei-remaining",
+      byuneiMax,
+      "byunei-reset",
+      "byunei-return",
+      "byunei-last-damage"
+    );
+
+    // 画面上の最大HP表示を書き換えたい場合に備えて、簡易APIを公開しておく。
+    // 必須ではないが、将来拡張用。
+    global.rs3_box_fb_v2 = {
+      setForneusMaxHP: function (hp) {
+        if (forneusAPI) {
+          forneusAPI.setMaxHP(hp);
+          if (forneusMaxSpan) {
+            forneusMaxSpan.textContent = String(Math.floor(Number(hp) || 0));
+          }
+        }
+      },
+      setByuneiMaxHP: function (hp) {
+        if (byuneiAPI) {
+          byuneiAPI.setMaxHP(hp);
+          if (byuneiMaxSpan) {
+            byuneiMaxSpan.textContent = String(Math.floor(Number(hp) || 0));
+          }
+        }
+      },
+
+      /**
+       * お供レベルに応じてフォル／ビュネの最大HPを更新する。
+       *
+       * 式:
+       *   基礎HP + (基礎HP / 32) * お供LV   （小数点以下切り捨て）
+       *
+       * 基礎HP:
+       *   フォル  : baseForneusMax
+       *   ビュネ  : baseByuneiMax
+       *
+       * @param {number} level お供レベル (0 以上)
+       */
+      setOtomoLevel: function (level) {
+        const raw = Number(level);
+        if (!Number.isFinite(raw) || raw < 0) {
+          return;
+        }
+        const lv = Math.floor(raw);
+
+        // フォル最大HP
+        const forneusBase = baseForneusMax;
+        const forneusHp = Math.floor(forneusBase + (forneusBase / 32) * lv);
+
+        // ビュネ最大HP
+        const byuneiBase = baseByuneiMax;
+        const byuneiHp = Math.floor(byuneiBase + (byuneiBase / 32) * lv);
+
+        // フォル側に反映
+        if (forneusAPI) {
+          forneusAPI.setMaxHP(forneusHp);
+        }
+        if (forneusMaxSpan) {
+          forneusMaxSpan.textContent = String(forneusHp);
+        }
+
+        // ビュネ側に反映
+        if (byuneiAPI) {
+          byuneiAPI.setMaxHP(byuneiHp);
+        }
+        if (byuneiMaxSpan) {
+          byuneiMaxSpan.textContent = String(byuneiHp);
+        }
+
+        // タイトル横の「お供レベル」表示も更新
+        const forneusLvSpan = document.getElementById("forneus-otomo-level-display");
+        if (forneusLvSpan) {
+          forneusLvSpan.textContent = String(lv);
+        }
+        const byuneiLvSpan = document.getElementById("byunei-otomo-level-display");
+        if (byuneiLvSpan) {
+          byuneiLvSpan.textContent = String(lv);
+        }
+      },
+
+      // HP判定だけ手動で再評価したい場合用
+      recalcLayoutByHP: onBossHPChanged
+    };
+  });
+
+
+})(this);
+  </script>
+  <script>
+// rs3_rta_v2_bunshin_link.js
+// ------------------------------------------------------------
+// 役割：
+//   ・パーティ内の5枠（主＋仲間1〜4）に A〜E の内部IDを振る
+//   ・陣形スロット①〜⑤ で A〜E を選択（表示はキャラ名）できるようにする
+//   ・陣形①〜⑤に割り当てられた A〜E に基づき、
+//       - 分身ダメージスロット1〜5の剣レベルを参照
+//       - rs3_box_bunshin_pat_v2.setSlot(...) を呼び出して
+//         最小／最大ダメージを更新する
+//
+// 前提：HTML 側
+//   ・キャラスロット：
+//       - 主人公   select: id="char-main"
+//       - 仲間1〜4 select: id="char-ally1"〜"char-ally4"
+//       - 剣レベル input: id="sword-main" / "sword-ally1"〜"sword-ally4"
+//   ・陣形スロット：
+//       - select#formation-slot-1〜5
+//   ・分身ダメージブロック：
+//       - rs3_box_bunshin_pat_v2.js が先に読み込まれている
+//       - bun-sword-lv-N / bun-dmg-max-N / bun-dmg-min-N は
+//         rs3_box_bunshin_pat_v2.js 側が面倒を見る
+//
+// このファイルでは「A〜E ↔ 主/仲1〜4 ↔ 陣形①〜⑤」の対応と、
+// 「剣レベル → 分身DMG更新」の橋渡しのみを担当する。
+//
+(function (global) {
+  "use strict";
+
+  // ==========================================================
+  // 0. 内部定数・状態
+  // ==========================================================
+
+  const PARTY_ROLES = [
+    {
+      id: "A",
+      roleKey: "main",
+      charSelectId: "char-main",
+      swordInputId: "sword-main",
+      labelPrefix: "主"
+    },
+    {
+      id: "B",
+      roleKey: "ally1",
+      charSelectId: "char-ally1",
+      swordInputId: "sword-ally1",
+      labelPrefix: "仲1"
+    },
+    {
+      id: "C",
+      roleKey: "ally2",
+      charSelectId: "char-ally2",
+      swordInputId: "sword-ally2",
+      labelPrefix: "仲2"
+    },
+    {
+      id: "D",
+      roleKey: "ally3",
+      charSelectId: "char-ally3",
+      swordInputId: "sword-ally3",
+      labelPrefix: "仲3"
+    },
+    {
+      id: "E",
+      roleKey: "ally4",
+      charSelectId: "char-ally4",
+      swordInputId: "sword-ally4",
+      labelPrefix: "仲4"
+    }
+  ];
+
+  const PARTY_ROLE_BY_ID = (function buildPartyRoleMap() {
+    const map = Object.create(null);
+    PARTY_ROLES.forEach(function (conf) {
+      map[conf.id] = conf;
+    });
+    return map;
+  })();
+
+  const FORMATION_INDEXES = [1, 2, 3, 4, 5];
+
+  /**
+   * 陣形スロットごとの割り当て状態
+   *   key: スロット番号（1〜5）
+   *   value: PARTY_ROLES の id（"A"〜"E"）または null
+   *
+   * 初期状態ではすべて null（＝デフォルトは「なし」）。
+   */
+  const formationState = {
+    1: null,
+    2: null,
+    3: null,
+    4: null,
+    5: null
+  };
+
+  // ==========================================================
+  // 1. 汎用ヘルパー
+  // ==========================================================
+
+  function byId(id) {
+    return document.getElementById(id) || null;
+  }
+
+  function getIntFromInput(inputEl) {
+    if (!inputEl) return null;
+    const v = Number(inputEl.value);
+    if (!Number.isFinite(v)) return null;
+    if (v < 0) return null;
+    return Math.floor(v);
+  }
+
+  function getCharLabelForRole(roleConfig) {
+    if (!roleConfig) return "（未設定）";
+
+    const sel = byId(roleConfig.charSelectId);
+    if (!sel) {
+      return roleConfig.labelPrefix + ":（選択欄無し）";
+    }
+
+    const opt = sel.options[sel.selectedIndex];
+    if (!opt || !opt.textContent) {
+      return roleConfig.labelPrefix + ":（未選択）";
+    }
+
+    const name = opt.textContent.trim();
+    if (!name) {
+      return roleConfig.labelPrefix + ":（未選択）";
+    }
+    return roleConfig.labelPrefix + ":" + name;
+  }
+
+  function getUsedPartyRoleIds() {
+    const used = new Set();
+    FORMATION_INDEXES.forEach(function (idx) {
+      const roleId = formationState[idx];
+      if (roleId) {
+        used.add(roleId);
+      }
+    });
+    return used;
+  }
+
+  // ==========================================================
+  // 2. 陣形スロット select の構築・更新
+  // ==========================================================
+
+  function rebuildFormationSelectForIndex(slotIndex, usedRoleIds) {
+    const selectId = "formation-slot-" + slotIndex;
+    const sel = byId(selectId);
+    if (!sel) return;
+
+    const currentRoleId = formationState[slotIndex] || "";
+
+    sel.innerHTML = "";
+
+    // 先頭に「なし」
+    const optNone = document.createElement("option");
+    optNone.value = "";
+    optNone.textContent = "なし";
+    sel.appendChild(optNone);
+
+    PARTY_ROLES.forEach(function (roleConf) {
+      const roleId = roleConf.id;
+      const opt = document.createElement("option");
+      opt.value = roleId;
+      opt.textContent = getCharLabelForRole(roleConf);
+
+      if (usedRoleIds.has(roleId) && roleId !== currentRoleId) {
+        opt.disabled = true;
+      }
+
+      sel.appendChild(opt);
+    });
+
+    // value 設定（null のときは "なし"）
+    if (currentRoleId) {
+      sel.value = currentRoleId;
+    } else {
+      sel.value = "";
+    }
+  }
+
+  function rebuildAllFormationSelects() {
+    const used = getUsedPartyRoleIds();
+    FORMATION_INDEXES.forEach(function (idx) {
+      rebuildFormationSelectForIndex(idx, used);
+    });
+  }
+
+  function onFormationSelectChange(slotIndex, event) {
+    const sel = event.currentTarget;
+    const value = sel.value;
+
+    formationState[slotIndex] = value || null;
+
+    rebuildAllFormationSelects();
+    recalcAllBunshinDamage();
+  }
+
+  // ==========================================================
+  // 3. 分身ダメージ再計算まわり
+  // ==========================================================
+
+  function getSwordLevelForPartyRole(roleId) {
+    const roleConf = PARTY_ROLE_BY_ID[roleId];
+    if (!roleConf) return null;
+
+    const input = byId(roleConf.swordInputId);
+    return getIntFromInput(input);
+  }
+
+  function getSwordLevelForFormationSlot(slotIndex) {
+    const roleId = formationState[slotIndex];
+    if (!roleId) return null;
+    return getSwordLevelForPartyRole(roleId);
+  }
+
+  function isBunshinBoxAvailable() {
+    return !!(global.rs3_box_bunshin_pat_v2 &&
+              typeof global.rs3_box_bunshin_pat_v2.setSlot === "function" &&
+              typeof global.rs3_box_bunshin_pat_v2.clearSlot === "function");
+  }
+
+  function recalcAllBunshinDamage() {
+    const bunshinAvailable = isBunshinBoxAvailable();
+    const api = bunshinAvailable ? global.rs3_box_bunshin_pat_v2 : null;
+
+    if (bunshinAvailable && api) {
+      FORMATION_INDEXES.forEach(function (slotIndex) {
+        const roleId = formationState[slotIndex];
+
+        if (!roleId) {
+          api.clearSlot(slotIndex);
+          return;
+        }
+
+        const swordLv = getSwordLevelForPartyRole(roleId);
+
+        if (swordLv == null) {
+          api.clearSlot(slotIndex);
+          return;
+        }
+
+        api.setSlot(slotIndex, {
+          swordLevel: swordLv
+        });
+      });
+    }
+
+    if (global.rs3_box_hakai_v2 &&
+        typeof global.rs3_box_hakai_v2.refreshPatternTable === "function") {
+      global.rs3_box_hakai_v2.refreshPatternTable();
+    }
+  }
+
+  // ==========================================================
+  // 4. 初期化処理
+  // ==========================================================
+
+  function attachFormationSelectHandlers() {
+    FORMATION_INDEXES.forEach(function (idx) {
+      const sel = byId("formation-slot-" + idx);
+      if (!sel) return;
+      sel.addEventListener("change", onFormationSelectChange.bind(null, idx));
+    });
+  }
+
+  function attachCharSelectHandlers() {
+    PARTY_ROLES.forEach(function (roleConf) {
+      const sel = byId(roleConf.charSelectId);
+      if (!sel) return;
+
+      sel.addEventListener("change", function () {
+        rebuildAllFormationSelects();
+        recalcAllBunshinDamage();
+      });
+    });
+  }
+
+  function attachSwordInputHandlers() {
+    PARTY_ROLES.forEach(function (roleConf) {
+      const input = byId(roleConf.swordInputId);
+      if (!input) return;
+
+      input.addEventListener("change", function () {
+        recalcAllBunshinDamage();
+      });
+      input.addEventListener("input", function () {
+        recalcAllBunshinDamage();
+      });
+    });
+  }
+
+  function attachPatternXHandlers() {
+    const prevBtn = byId("pattern-x-prev-button");
+    const nextBtn = byId("pattern-x-next-button");
+
+    if (prevBtn) {
+      prevBtn.addEventListener("click", function () {
+        recalcAllBunshinDamage();
+      });
+    }
+    if (nextBtn) {
+      nextBtn.addEventListener("click", function () {
+        recalcAllBunshinDamage();
+      });
+    }
+  }
+
+  let initialized = false;
+
+  function initBunshinLink() {
+    if (initialized) {
+      // 初期化済みでも最新状態へ合わせて再計算だけ走らせる
+      recalcAllBunshinDamage();
+      rebuildAllFormationSelects();
+      return;
+    }
+
+    rebuildAllFormationSelects();
+
+    attachFormationSelectHandlers();
+    attachCharSelectHandlers();
+    attachSwordInputHandlers();
+    attachPatternXHandlers();
+
+    recalcAllBunshinDamage();
+    initialized = true;
+  }
+
+  global.rs3_rta_v2_bunshin_link = {
+    getFormationState: function () {
+      const copy = {};
+      FORMATION_INDEXES.forEach(function (idx) {
+        copy[idx] = formationState[idx] || null;
+      });
+      return copy;
+    },
+    init: initBunshinLink,
+    recalc: recalcAllBunshinDamage,
+    rebuildFormationSelects: rebuildAllFormationSelects,
+    getSwordForSlot: getSwordLevelForFormationSlot
+  };
+
+})(this);
+
+  </script>
+  <script>
+(function (global) {
+  "use strict";
+
+  // ----------------------------------------------------------
+  // 分身剣 閃き確率ロジック
+  //  ・敵閃きレベル − 分身剣難度の差分 d （-10〜10）
+  //  ・王冠 有／無（フォルのみ両方、ビュネは無のみ）
+  //  ・その戦闘中の閃き回数 s（0〜8）
+  // から「1 行動あたりの閃き確率」を計算する。
+  // ----------------------------------------------------------
+
+  // 分身剣の難度・ボスの閃きレベル
+  var SPARK_DIFFICULTY_BUNSHIN = 31;
+  var SPARK_LEVEL_FORNEUS      = 28;  // d = -3
+  var SPARK_LEVEL_BYUNEI       = 29;  // d = -2
+
+  // 差分 -10〜10 を 0〜20 に対応させたときの
+  // 「1024スロット中の当たりマス個数 H_base」
+  // （＝王冠有り／無しテーブル）
+  var H_BASE_WITH_CROWN = [
+    0,   // -10 以下
+    0,   // -9
+    9,   // -8
+    14,  // -7
+    21,  // -6
+    27,  // -5
+    37,  // -4
+    54,  // -3
+    73,  // -2
+    85,  // -1
+    104, // 0
+    117, // 1
+    130, // 2
+    141, // 3
+    150, // 4
+    164, // 5
+    182, // 6
+    188, // 7
+    198, // 8
+    202, // 9
+    214  // 10 以上
+  ];
+
+  var H_BASE_WITHOUT_CROWN = [
+    0,   // -10 以下
+    0,   // -9
+    0,   // -8
+    0,   // -7
+    11,  // -6
+    18,  // -5
+    24,  // -4
+    30,  // -3
+    44,  // -2
+    60,  // -1
+    82,  // 0
+    97,  // 1
+    108, // 2
+    123, // 3
+    130, // 4
+    141, // 5
+    148, // 6
+    150, // 7
+    164, // 8
+    164, // 9
+    168  // 10 以上
+  ];
+
+  // 差分 d （-10〜10）を 0〜20 のインデックスに
+  function clampSparkIndex(diff) {
+    var v = Number(diff);
+    if (!Number.isFinite(v)) return 10; // 0差をデフォルト扱い
+    if (v < -10) return 0;
+    if (v > 10)  return 20;
+    return v + 10;
+  }
+
+  // 差分 d と 王冠有無から H_base を取得
+  function getBaseHits(diff, hasCrown) {
+    var idx   = clampSparkIndex(diff);
+    var table = hasCrown ? H_BASE_WITH_CROWN : H_BASE_WITHOUT_CROWN;
+    var n     = table[idx];
+    return Number.isFinite(n) ? n : 0;
+  }
+
+  // ②で合意したロジック：
+  // H_eff = floor( H_base * (8 - s) / 8 ) （s=0〜7）、s>=8なら0
+  function computeEffectiveHits(baseHits, sparkCount) {
+    var base = Number(baseHits);
+    if (!Number.isFinite(base) || base <= 0) return 0;
+
+    var s = Number(sparkCount);
+    if (!Number.isFinite(s) || s <= 0) {
+      // 0 回なら補正なし
+      return base;
+    }
+    if (s >= 8) {
+      // 8 回以上は 0%
+      return 0;
+    }
+
+    var eff = Math.floor(base * (8 - s) / 8);
+    if (eff < 0) eff = 0;
+    return eff;
+  }
+
+  // 差分 d／王冠有無／閃き回数 s から「1 行動あたり閃き確率（0〜1）」を返す
+  function computeSparkRate(diff, hasCrown, sparkCount) {
+    var baseHits = getBaseHits(diff, hasCrown);
+    var effHits  = computeEffectiveHits(baseHits, sparkCount);
+
+    if (effHits <= 0) return 0;
+    return effHits / 1024;
+  }
+
+  // HTML内の input / span を読んで、全ての表示を更新する
+  function updateAllSparkRates() {
+    // 対フォル：王冠 有／無
+    var inputFor = document.getElementById("spark-count-forneus");
+    var spanForCrown   = document.getElementById("spark-rate-forneus-crown");
+    var spanForNoCrown = document.getElementById("spark-rate-forneus-nocrown");
+
+    // 対ビュネ：王冠 無 のみ
+    var inputByu = document.getElementById("spark-count-byunei");
+    var spanByuNoCrown = document.getElementById("spark-rate-byunei-nocrown");
+
+    // どれか一式でも無いなら何もしない
+    if (!inputFor || !spanForCrown || !spanForNoCrown || !inputByu || !spanByuNoCrown) {
+      return;
+    }
+
+    var cntFor = Number(inputFor.value);
+    if (!Number.isFinite(cntFor) || cntFor < 0) cntFor = 0;
+    if (cntFor > 8) cntFor = 8;
+
+    var cntByu = Number(inputByu.value);
+    if (!Number.isFinite(cntByu) || cntByu < 0) cntByu = 0;
+    if (cntByu > 8) cntByu = 8;
+
+    // 差分 d = 敵閃きレベル − 分身剣難度
+    var diffFor = SPARK_LEVEL_FORNEUS - SPARK_DIFFICULTY_BUNSHIN; // -3
+    var diffByu = SPARK_LEVEL_BYUNEI  - SPARK_DIFFICULTY_BUNSHIN; // -2
+
+    // フォル：王冠有／無の両方を計算
+    var probForCrown   = computeSparkRate(diffFor, true,  cntFor);
+    var probForNoCrown = computeSparkRate(diffFor, false, cntFor);
+
+    // ビュネ：王冠 無 のみ
+    var probByuNoCrown = computeSparkRate(diffByu, false, cntByu);
+
+    // % 表記にして反映（HTMLの初期値が 0.00% なので小数2桁で揃える）
+    spanForCrown.textContent   = (probForCrown   * 100).toFixed(2) + "%";
+    spanForNoCrown.textContent = (probForNoCrown * 100).toFixed(2) + "%";
+    spanByuNoCrown.textContent = (probByuNoCrown * 100).toFixed(2) + "%";
+  }
+
+
+  function initSparkSpin() {
+    // 閃き確率ボックスのルート
+    var root = document.getElementById("rta-v2-top-ls") || document;
+    if (!root) return;
+
+    // クリックイベントを一括で受け取る
+    root.addEventListener("click", function (ev) {
+      var target = ev.target;
+      if (!(target instanceof HTMLElement)) return;
+
+      // .spin-btn（▲／▼）以外は無視
+      var btn = target.closest(".spin-btn");
+      if (!btn) return;
+
+      // 同じスピンボックス内の input を取得
+      var box = btn.closest(".spin-box");
+      if (!box) return;
+
+      /** @type {HTMLInputElement | null} */
+      var input = box.querySelector(".spark-count-input");
+      if (!input) return;
+
+      // ▲なら +1、▼なら -1（step属性に従う）
+      var direction = btn.classList.contains("spin-up") ? 1 : -1;
+
+      var step = Number(input.step);
+      if (!Number.isFinite(step) || step <= 0) {
+        step = 1;
+      }
+
+      var value = Number(input.value);
+      if (!Number.isFinite(value)) {
+        value = 0;
+      }
+
+      value += step * direction;
+
+      // min / max を尊重
+      if (input.min !== "") {
+        var min = Number(input.min);
+        if (Number.isFinite(min) && value < min) {
+          value = min;
+        }
+      }
+      if (input.max !== "") {
+        var max = Number(input.max);
+        if (Number.isFinite(max) && value > max) {
+          value = max;
+        }
+      }
+
+      input.value = String(value);
+
+      // 今後、確率計算ロジックを別JSで付けても動くように input/change を飛ばしておく
+      var evInput = new Event("input", { bubbles: true });
+      var evChange = new Event("change", { bubbles: true });
+      input.dispatchEvent(evInput);
+      input.dispatchEvent(evChange);
+    });
+
+
+
+    // 閃き回数が手入力で変わったときも確率を再計算
+    var inputFor = document.getElementById("spark-count-forneus");
+    if (inputFor) {
+      inputFor.addEventListener("input", updateAllSparkRates);
+      inputFor.addEventListener("change", updateAllSparkRates);
+    }
+
+    var inputByu = document.getElementById("spark-count-byunei");
+    if (inputByu) {
+      inputByu.addEventListener("input", updateAllSparkRates);
+      inputByu.addEventListener("change", updateAllSparkRates);
+    }
+
+    // 初期表示（0 回時）の閃き確率を計算しておく
+    updateAllSparkRates();
+
+
+
+  }
+
+  // DOM構築完了時に初期化
+  document.addEventListener("DOMContentLoaded", initSparkSpin);
+
+  // 将来、外から再初期化したくなったとき用に簡単なAPIも出しておく
+  global.rs3_box_spark_v2 = {
+    init: initSparkSpin
+  };
+
+})(this);
+
+  </script>
+  <script>
+// rs3_box_hakai_v2.js
+// #rta-v2-bottom の中に、破壊ボックス一式（左ダメージ＋右形態）を丸ごと生成するスクリプト。
+// ・HTML構造生成
+// ・HP減算／ターン管理
+// ・破壊形態①〜④の推察ロジック
+// ・獣魔撃破／リターン／闇移行／リセット
+// までをこのファイル内で完結させる。 :contentReference[oaicite:0]{index=0}
+
+(function () {
+  'use strict';
+
+  const global = window;
+
+  // =========================================================
+  // 1. HTML生成
+  // =========================================================
+
+  function buildHakaiBoxHtml() {
+    // いままで rs3_box_hakai_v2.html の <div id="rta-v2-bottom"> の中に書いていた内容を
+    // そのままテンプレートにしたものです。
+    return `
+    <div class="hakai-bottom-box">
+
+      <!-- 左：分身剣ダメージ入力 -->
+      <div class="hakai-dmg-area">
+
+        <!-- 見出し＋上部ボタン（獣魔撃破／リターン／闇移行） -->
+        <div class="hakai-dmg-header">
+          <div class="hakai-dmg-title">分身剣ダメージ入力</div>
+          <div class="hakai-dmg-header-buttons">
+            <button id="beast-btn" type="button" class="hakai-header-btn">
+              獣魔撃破
+            </button>
+            <button id="return-btn" type="button" class="hakai-header-btn">
+              リターン
+            </button>
+            <button id="dark-btn" type="button" class="hakai-header-btn">
+              闇移行
+            </button>
+          </div>
+        </div>
+
+        <!-- ダメージ入力 ①〜⑤ ＋ ターン数 -->
+        <div class="dmg-grid">
+          <!-- 1段目：①②③ -->
+          <div class="dmg-slot current" data-slot="0">
+            <span class="slot-label">①</span>
+            <input id="dmg-1" class="dmg-input" inputmode="numeric" pattern="[0-9]*">
+          </div>
+          <div class="dmg-slot" data-slot="1">
+            <span class="slot-label">②</span>
+            <input id="dmg-2" class="dmg-input" inputmode="numeric" pattern="[0-9]*">
+          </div>
+          <div class="dmg-slot" data-slot="2">
+            <span class="slot-label">③</span>
+            <input id="dmg-3" class="dmg-input" inputmode="numeric" pattern="[0-9]*">
+          </div>
+
+          <!-- 2段目：ターン数／④／⑤ -->
+          <div class="turn-cell">
+            <div class="turn-count-value" id="turn-count">0ターン</div>
+          </div>
+          <div class="dmg-slot" data-slot="3">
+            <span class="slot-label">④</span>
+            <input id="dmg-4" class="dmg-input" inputmode="numeric" pattern="[0-9]*">
+          </div>
+          <div class="dmg-slot" data-slot="4">
+            <span class="slot-label">⑤</span>
+            <input id="dmg-5" class="dmg-input" inputmode="numeric" pattern="[0-9]*">
+          </div>
+        </div>
+
+        <!-- 下段：残りHP＋ターン終了＋リセット -->
+        <div class="hakai-bottom-row">
+          <div class="hakai-bottom-left">
+            <div class="hp-panel">
+              <div class="hp-caption">残りHP</div>
+              <div class="hp-value" id="hakai-hp">7500</div>
+            </div>
+
+            <button id="endturn-btn" type="button" class="hakai-bottom-btn">
+              ターン終了
+            </button>
+          </div>
+
+          <button id="reset-btn" type="button" class="hakai-bottom-btn hakai-reset-right">
+            リセット
+          </button>
+        </div>
+
+      </div><!-- /.hakai-dmg-area -->
+
+      <!-- 右：現在形態＋8ターン履歴 -->
+      <div class="hakai-pattern-area">
+
+        <!-- 上段：推察された現在形態（初期値は①） -->
+        <div class="pattern-current-box">
+          <span class="pattern-current-label">現在形態</span>
+          <span class="pattern-current-value" id="pattern-current-shape">①</span>
+        </div>
+
+        <!-- 下段：8ターン分の履歴（4行×4列） -->
+        <table class="pattern-history-table">
+          <tbody>
+            <tr>
+              <td class="hist-turn-label">1T</td>
+              <td class="hist-form-cell" id="hist-form-1">①</td>
+              <td class="hist-turn-label">5T</td>
+              <td class="hist-form-cell" id="hist-form-5">？</td>
+            </tr>
+            <tr>
+              <td class="hist-turn-label">2T</td>
+              <td class="hist-form-cell" id="hist-form-2">？</td>
+              <td class="hist-turn-label">6T</td>
+              <td class="hist-form-cell" id="hist-form-6">？</td>
+            </tr>
+            <tr>
+              <td class="hist-turn-label">3T</td>
+              <td class="hist-form-cell" id="hist-form-3">？</td>
+              <td class="hist-turn-label">7T</td>
+              <td class="hist-form-cell" id="hist-form-7">？</td>
+            </tr>
+            <tr>
+              <td class="hist-turn-label">4T</td>
+              <td class="hist-form-cell" id="hist-form-4">？</td>
+              <td class="hist-turn-label">8T</td>
+              <td class="hist-form-cell" id="hist-form-8">？</td>
+            </tr>
+          </tbody>
+        </table>
+
+      </div><!-- /.hakai-pattern-area -->
+
+    </div><!-- /.hakai-bottom-box -->
+    `;
+  }
+
+  // =========================================================
+  // 2. 敵パラメータ（分身Patと同じ値をここにも持つ）
+  // =========================================================
+
+  // PATTERN_LIST から破壊形態①〜④に対応する vit / slash(def) を参照する。
+  // ※必要最低限：index 1〜4 のみを持つ。
+  const HAKAI_PATTERNS = [
+    { index: 1, symbol: "①", vit: 45, def: 45 },
+    { index: 2, symbol: "②", vit: 46, def: 33 },
+    { index: 3, symbol: "③", vit: 40, def: 28 },
+    { index: 4, symbol: "④", vit: 40, def: 23 }
+  ];
+
+  function getEnemyParamsForSymbol(symbol) {
+    const pat = HAKAI_PATTERNS.find(p => p.symbol === symbol);
+    if (!pat) {
+      // 念のためフォールバック：①
+      return { vit: 45, def: 45 };
+    }
+    return { vit: pat.vit, def: pat.def };
+  }
+
+  // =========================================================
+  // 3. 破壊ボックス内部状態
+  // =========================================================
+
+  const hakaiState = {
+    hp: 7500,          // 現在の本体HP（ゲーム内と同じ7500。減算は/10）
+    turn: 1,           // 経過ターン数
+    lastEdit: null,    // 直近に編集したスロット番号(1〜5)
+    lastHp: null,      // リターン用：編集前のHP
+    editHistory: [],   // 同一ターン内のダメージ入力履歴（リターン用スタック）
+    history: ["①","？","？","？","？","？","？","？"], // 1T〜8Tの形態履歴
+    currentForm: "①", // 現在形態（初期値①）
+    darkMode: false,   // 闇突入フラグ
+    patternTable: null, // 形態①〜④ × スロット1〜5 の {min, max} テーブル
+    // --- hakai_v2_js 形態推察・ログ ここから
+    patternMeta: null  // 乱数幅テーブル生成時のロールID／剣レベルスナップショット
+    // --- hakai_v2_js 形態推察・ログ ここまで
+  };
+
+
+  function el(id) {
+    return document.getElementById(id);
+  }
+
+  // =========================================================
+  // 4. 剣レベル取得の差し込みポイント
+  // =========================================================
+
+  /**
+   * フォーメーションのスロット（1〜5）にいるキャラの「分身剣レベル」を返す。
+   * rs3_rta_v2_bunshin_link.js 側のロジックを再利用し、重複定義による齟齬を防ぐ。
+   *
+   * もし bunshin_link が未読み込みの場合のみ、同じマッピングに基づく簡易 DOM 参照でフォールバックする。
+   */
+  function getSwordLevelForSlot(slotIndex) {
+    const SWORD_INPUT_ID_BY_ROLE = {
+      A: "sword-main",
+      B: "sword-ally1",
+      C: "sword-ally2",
+      D: "sword-ally3",
+      E: "sword-ally4"
+    };
+
+    function clampSwordLevel(v) {
+      const n = Number(v);
+      if (!Number.isFinite(n)) return 0;
+      return Math.max(0, Math.min(50, Math.floor(n)));
+    }
+
+    // 1. bunshin_link 側のAPIがあればそれを優先して使う
+    if (global.rs3_rta_v2_bunshin_link) {
+      const link = global.rs3_rta_v2_bunshin_link;
+
+      if (typeof link.getSwordForSlot === "function") {
+        return clampSwordLevel(link.getSwordForSlot(slotIndex));
+      }
+
+      // getSwordForSlot が無い場合でも formation 情報が取れるなら DOM 参照に流用する
+      if (typeof link.getFormationState === "function") {
+        const formation = link.getFormationState();
+        const roleFromFormation = formation && formation[slotIndex];
+        if (roleFromFormation && SWORD_INPUT_ID_BY_ROLE[roleFromFormation]) {
+          const input = document.getElementById(SWORD_INPUT_ID_BY_ROLE[roleFromFormation]);
+          if (input) {
+            return clampSwordLevel(input.value);
+          }
+        }
+      }
+    }
+
+    // 2. フォールバック：DOM直参照（bunshin_link の PARTY_ROLES と同一マッピング）
+    const sel = document.getElementById("formation-slot-" + slotIndex);
+    if (!sel) return 0;
+
+    const roleId = sel.value; // "", "A"〜"E"
+    const swordId = SWORD_INPUT_ID_BY_ROLE[roleId];
+    if (!swordId) return 0;
+
+    const input = document.getElementById(swordId);
+    if (!input) return 0;
+
+    return clampSwordLevel(input.value);
+  }
+
+  // --- hakai_v2_js 形態推察・ログ ここから
+  function getFormationRoleForSlot(slotIndex) {
+    if (global.rs3_rta_v2_bunshin_link &&
+        typeof global.rs3_rta_v2_bunshin_link.getFormationState === "function") {
+      const formation = global.rs3_rta_v2_bunshin_link.getFormationState();
+      return (formation && formation[slotIndex]) || null;
+    }
+
+    const sel = document.getElementById("formation-slot-" + slotIndex);
+    if (!sel) return null;
+    const roleId = sel.value;
+    return roleId || null;
+  }
+
+  // =========================================================
+  // 5. 形態①〜④ × スロット1〜5 の乱数幅テーブルを構築
+  // =========================================================
+
+  function rebuildPatternDamageTable() {
+    if (!window.bunshin_sword_99 || typeof window.bunshin_sword_99.calcDamage !== "function") {
+      // 分身剣計算ロジックが未読み込みの場合は何もしない
+      hakaiState.patternTable = null;
+      hakaiState.patternMeta = null;
+      return;
+    }
+
+    const table = {}; // { "①": [ {min,max}, ...slot5 ], ... }
+    const rolesSnapshot = [];
+    const swordSnapshot = [];
+
+    // 形態①〜④
+    HAKAI_PATTERNS.forEach(pat => {
+      const formSymbol = pat.symbol;
+      const enemy = getEnemyParamsForSymbol(formSymbol);
+      const slots = [];
+
+      for (let slot = 1; slot <= 5; slot++) {
+        // スナップショット保存：いまの陣形と剣レベルを把握しておく
+        // （ダメージスロットとの紐付けを確実にするため）
+        const roleId = getFormationRoleForSlot(slot);
+        const swordLv = getSwordLevelForSlot(slot);
+        if (rolesSnapshot.length < slot) {
+          rolesSnapshot.push(roleId);
+          swordSnapshot.push(swordLv);
+        }
+
+        const lv = Math.max(0, Math.min(50, Number(swordLv) || 0));
+
+        const params = {
+          lv: lv,
+          wea: 25,          // 武器攻撃力は25固定
+          def: enemy.def,   // 斬防
+          vit: enemy.vit,   // 体力
+          prev: 99          // 分身剣用デフォルト
+          // base / sei は calcDamage 側の分身剣デフォルトを使用
+        };
+
+        let range = null;
+        // PAT ボックス側と同じロジックを可能な限り再利用して、乱数幅の乖離を防ぐ
+        if (global.rs3_box_bunshin_pat_v2 &&
+            typeof global.rs3_box_bunshin_pat_v2.computeDamageRange === "function") {
+          range = global.rs3_box_bunshin_pat_v2.computeDamageRange({
+            swordLevel: params.lv,
+            weaponPower: params.wea,
+            enemyDef: params.def,
+            enemyVit: params.vit,
+            // isFront は slotNo に基づく PAT 側の既定判定を利用
+          }, slot);
+        }
+
+        // フォールバック：旧実装（必要に応じて陣形補正だけ PAT 側のヘルパーを使う）
+        if (!range) {
+          const res = window.bunshin_sword_99.calcDamage(params);
+          let min = Number(res && res.min) || 0;
+          let max = Number(res && res.max) || 0;
+
+          if (global.rs3_box_bunshin_pat_v2 &&
+              typeof global.rs3_box_bunshin_pat_v2.applyFormationBonus === "function" &&
+              typeof global.rs3_box_bunshin_pat_v2.isFrontSlot === "function") {
+            const isFront = global.rs3_box_bunshin_pat_v2.isFrontSlot(slot);
+            min = global.rs3_box_bunshin_pat_v2.applyFormationBonus(min, isFront);
+            max = global.rs3_box_bunshin_pat_v2.applyFormationBonus(max, isFront);
+          }
+
+          range = { min, max };
+        }
+
+        slots.push({
+          min: Number(range && range.min) || 0,
+          max: Number(range && range.max) || 0
+        });
+      }
+
+      table[formSymbol] = slots;
+    });
+
+    hakaiState.patternTable = table;
+    hakaiState.patternMeta = {
+      roles: rolesSnapshot,
+      swordLevels: swordSnapshot
+    };
+
+    // --- hakai_v2_js 形態推察・ログ 修正ここから
+    // 乱数幅テーブルが組めているか一度だけ確認できるようにログを残す
+    console.log("hakai_v2_js: built patternTable", hakaiState.patternTable, hakaiState.patternMeta);
+    // --- hakai_v2_js 形態推察・ログ 修正ここまで
+  }
+
+  // =========================================================
+  // 6. 表示更新系
+  // =========================================================
+
+  function updateHpDisplay() {
+    const hpElem = el("hakai-hp");
+    if (hpElem) hpElem.textContent = String(hakaiState.hp);
+  }
+
+  function updateTurnDisplay() {
+    const tElem = el("turn-count");
+    if (tElem) tElem.textContent = `${hakaiState.turn}ターン`;
+  }
+
+  function updateFormDisplays() {
+    const cur = el("pattern-current-shape");
+    if (cur) cur.textContent = hakaiState.currentForm;
+
+    for (let i = 0; i < 8; i++) {
+      const cell = el(`hist-form-${i + 1}`);
+      if (cell) cell.textContent = hakaiState.history[i];
+    }
+  }
+
+  // =========================================================
+  // 7. 形態推察ロジック
+  // =========================================================
+
+  // --- hakai_v2_js 形態推察・ログ 修正ここから
+  // formation-slot(①〜⑤) → roleId(A〜E) → sword input → patternTable → 推察結果
+  // の流れで分身剣の乱数幅を把握し、入力ダメージから現在形態を推察する。
+  // --- hakai_v2_js 形態推察・ログ 修正ここまで
+
+  function ensurePatternTableUpToDate() {
+    const currentRoles = [];
+    const currentSwords = [];
+
+    for (let slot = 1; slot <= 5; slot++) {
+      currentRoles.push(getFormationRoleForSlot(slot));
+      currentSwords.push(getSwordLevelForSlot(slot));
+    }
+
+    if (!hakaiState.patternTable ||
+        !hakaiState.patternMeta ||
+        !Array.isArray(hakaiState.patternMeta.roles) ||
+        !Array.isArray(hakaiState.patternMeta.swordLevels)) {
+      rebuildPatternDamageTable();
+      return;
+    }
+
+    const prevRoles = hakaiState.patternMeta.roles;
+    const prevSwords = hakaiState.patternMeta.swordLevels;
+
+    const isSameRoles = prevRoles.length === currentRoles.length &&
+      prevRoles.every((v, idx) => v === currentRoles[idx]);
+    const isSameSwords = prevSwords.length === currentSwords.length &&
+      prevSwords.every((v, idx) => v === currentSwords[idx]);
+
+    if (!isSameRoles || !isSameSwords) {
+      rebuildPatternDamageTable();
+    }
+  }
+
+  /**
+   * 現在ターン中に入力されているダメージ（非0）と patternTable を使って
+   * そのターンの形態（①〜④）を推察する。
+   * - 乱数幅の重複がない前提なので、一致する形態は高々1つ。
+   * - 一致なしの場合は、直前の currentForm を維持する。
+   */
+  function analyzeSlotDamage(slotIndex, damageValue, table) {
+    const ranges = {};
+    const matchedForms = [];
+
+    HAKAI_PATTERNS.forEach(pat => {
+      const slotRanges = table && table[pat.symbol];
+      const range = slotRanges && slotRanges[slotIndex - 1];
+      if (range) {
+        ranges[pat.symbol] = { min: range.min, max: range.max };
+        if (damageValue >= range.min && damageValue <= range.max) {
+          matchedForms.push(pat.symbol);
+        }
+      }
+    });
+
+    return { ranges, matchedForms };
+  }
+
+  function computeFormEstimation() {
+    ensurePatternTableUpToDate();
+    const table = hakaiState.patternTable;
+    const result = {
+      form: hakaiState.currentForm,
+      candidateForms: [],
+      nonZeroSlots: [],
+      perSlotMatches: [],
+      intersectionForms: [],
+      table
+    };
+
+    if (!table) {
+      return result;
+    }
+
+    for (let slot = 1; slot <= 5; slot++) {
+      const input = el(`dmg-${slot}`);
+      if (!input) continue;
+      const raw = input.value.trim();
+      if (raw === "") continue;
+      const v = Number(raw);
+      if (!Number.isFinite(v)) continue;
+      if (v === 0) continue; // 0は推察に使わない
+      result.nonZeroSlots.push({ slot, value: v });
+    }
+
+    if (result.nonZeroSlots.length === 0) {
+      return result;
+    }
+
+    // まずスロット単位でのマッチ結果を集計
+    result.nonZeroSlots.forEach(nz => {
+      const analysis = analyzeSlotDamage(nz.slot, nz.value, table);
+      result.perSlotMatches.push({
+        slot: nz.slot,
+        value: nz.value,
+        matchedForms: analysis.matchedForms,
+        ranges: analysis.ranges
+      });
+    });
+
+    // A: 全スロット共通の形態（積集合）を優先
+    if (result.perSlotMatches.length > 0) {
+      let common = result.perSlotMatches[0].matchedForms.slice();
+      for (let i = 1; i < result.perSlotMatches.length; i++) {
+        const next = result.perSlotMatches[i].matchedForms;
+        common = common.filter(f => next.indexOf(f) !== -1);
+      }
+      result.intersectionForms = common;
+      if (common.length === 1) {
+        result.form = common[0];
+        result.candidateForms = common.slice();
+        return result;
+      }
+    }
+
+    // B: 共通形態がない場合、どこか1スロットだけ一意ならそれを採用
+    const uniqueSlot = result.perSlotMatches.find(m => m.matchedForms.length === 1);
+    if (uniqueSlot) {
+      result.form = uniqueSlot.matchedForms[0];
+      result.candidateForms = uniqueSlot.matchedForms.slice();
+
+      // 他スロットで矛盾がある場合は警告に残す
+      const conflictingSlots = result.perSlotMatches.filter(m => {
+        if (m === uniqueSlot) return false;
+        if (m.matchedForms.length === 0) return true;
+        return m.matchedForms.indexOf(result.form) === -1;
+      });
+      if (conflictingSlots.length > 0) {
+        console.warn("hakai_v2_js: unique slot decided form but other slots conflicted", {
+          decidedBy: uniqueSlot,
+          conflictingSlots
+        });
+      }
+
+      return result;
+    }
+
+    // C: それでも決まらない場合は現状維持＋詳細ログ
+    console.warn("hakai_v2_js: form estimation not decisive", {
+      nonZeroSlots: result.nonZeroSlots,
+      perSlotMatches: result.perSlotMatches,
+      intersectionForms: result.intersectionForms,
+      patternTableSnippet: table
+    });
+
+    return result;
+  }
+
+  function estimateFormFromInputs() {
+    const estimation = computeFormEstimation();
+    return estimation.form;
+  }
+
+  /**
+   * ダメージ入力（非0）が入ったタイミングで現在形態を更新する。
+   * - ただし闇モード中は変化させない。
+   */
+  function updateCurrentFormFromInputs(estimationResult) {
+    if (hakaiState.darkMode) return;
+    const estimation = estimationResult || computeFormEstimation();
+    hakaiState.currentForm = estimation.form;
+    updateFormDisplays();
+  }
+
+  function logDamageInference(slotIndex, damageValue, estimationResult) {
+    const estimation = estimationResult || computeFormEstimation();
+    const table = estimation.table || hakaiState.patternTable;
+    const roleId = (hakaiState.patternMeta && hakaiState.patternMeta.roles && hakaiState.patternMeta.roles[slotIndex - 1])
+      || getFormationRoleForSlot(slotIndex);
+    const swordLevel = (hakaiState.patternMeta && hakaiState.patternMeta.swordLevels && hakaiState.patternMeta.swordLevels[slotIndex - 1])
+      || getSwordLevelForSlot(slotIndex);
+    const slotAnalysis = analyzeSlotDamage(slotIndex, damageValue, table);
+
+    if (damageValue > 0 && slotAnalysis.matchedForms.length !== 1) {
+      console.warn("hakai_v2_js: expected exactly 1 form match for slot", {
+        slotIndex,
+        damageValue,
+        matchedForms: slotAnalysis.matchedForms
+      });
+    }
+
+    const reason = (function () {
+      if (slotAnalysis.matchedForms.length === 1) {
+        return `matched ${slotAnalysis.matchedForms[0]} for slot ${slotIndex}`;
+      }
+      if (slotAnalysis.matchedForms.length === 0) {
+        return "no form matched this damage value";
+      }
+      return `multiple forms matched this damage value: ${slotAnalysis.matchedForms.join(',')}`;
+    })();
+
+    console.log({
+      damageSlotIndex: slotIndex,
+      formationSlotIndex: slotIndex,
+      partyId: roleId,
+      swordLevel: swordLevel,
+      inputDamage: damageValue,
+      usedTableKey: `lv${swordLevel}`,
+      candidateRanges: slotAnalysis.ranges,
+      matchedFormsForSlot: slotAnalysis.matchedForms,
+      overallCandidates: estimation.candidateForms,
+      matchedForm: estimation.form,
+      matchReason: reason
+    });
+  }
+
+  function handleDamageInputChange(slotIndex) {
+    const input = el(`dmg-${slotIndex}`);
+    if (!input) return;
+
+    const raw = input.value.trim();
+    const dmg = Number(raw);
+
+    // HP減算を先に適用
+    applyDamage(slotIndex);
+
+    // 形態推察（最新の乱数テーブルで実施）
+    const estimation = computeFormEstimation();
+
+    if (raw !== "" && Number.isFinite(dmg)) {
+      logDamageInference(slotIndex, dmg, estimation);
+    }
+
+    updateCurrentFormFromInputs(estimation);
+  }
+
+  function handlePartyDataChange() {
+    rebuildPatternDamageTable();
+    const estimation = computeFormEstimation();
+    updateCurrentFormFromInputs(estimation);
+  }
+
+  function attachPartyDataChangeHandlers() {
+    for (let slot = 1; slot <= 5; slot++) {
+      const sel = el(`formation-slot-${slot}`);
+      if (sel) {
+        sel.addEventListener("change", handlePartyDataChange);
+      }
+    }
+
+    ["sword-main", "sword-ally1", "sword-ally2", "sword-ally3", "sword-ally4"].forEach(id => {
+      const input = el(id);
+      if (input) {
+        input.addEventListener("change", handlePartyDataChange);
+      }
+    });
+
+    ["char-main", "char-ally1", "char-ally2", "char-ally3", "char-ally4"].forEach(id => {
+      const sel = el(id);
+      if (sel) {
+        sel.addEventListener("change", handlePartyDataChange);
+      }
+    });
+  }
+  // --- hakai_v2_js 形態推察・ログ ここまで
+
+  // =========================================================
+  // 8. HP・ターン・各種ボタン挙動
+  // =========================================================
+
+  function applyDamage(slotId) {
+    const input = el(`dmg-${slotId}`);
+    if (!input) return;
+
+    const raw = input.value.trim();
+    if (raw === "") return;
+
+    let v = Number(raw);
+    if (!Number.isFinite(v)) return;
+
+    // 「マイナス値入力で回復」は破壊ボックス仕様に合わせて実装する場合、
+    // ここで v<0 を許容し、そのまま /10 でHPに反映させる。
+    const dmgUnit = Math.floor(v / 10);
+    if (!Number.isFinite(dmgUnit) || dmgUnit === 0) {
+      // 0ダメージ（または 0超だが /10 で0になる低値）は HP 変動なし。
+      // HP変動がない入力は履歴に積まない。
+      hakaiState.lastEdit = slotId;
+      hakaiState.lastHp = hakaiState.hp;
+      return;
+    }
+
+    // リターン用履歴に1件追加（同一ターン内だけ保持）
+    if (!Array.isArray(hakaiState.editHistory)) {
+      hakaiState.editHistory = [];
+    }
+    hakaiState.editHistory.push({
+      slot: slotId,
+      prevHp: hakaiState.hp
+    });
+
+    // 互換用フィールドも更新
+    hakaiState.lastEdit = slotId;
+    hakaiState.lastHp = hakaiState.hp;
+
+    const nextHp = hakaiState.hp - dmgUnit;
+    hakaiState.hp = nextHp < 0 ? 0 : nextHp;
+
+    updateHpDisplay();
+  }
+
+
+  /**
+   * 1ターンを締めてターン数＋履歴を更新する。
+   * - 形態移行はターン単位。ターン中の形態変化はしない。
+   * - ただし「現在形態」はダメージ入力時点で前倒し表示されている。
+   */
+  /**
+   * 1ターンを締めてターン数＋履歴を更新する。
+   * - 右のスロットは「そのターンの最終形態」を記録する。
+   * - 1T目は常に①固定。2T目以降のみ推察結果を書き込む。
+   */
+  function endTurn() {
+    if (hakaiState.darkMode) {
+      // 闇モード中もターン数はカウント継続
+      // 「いまのターン」の行に闇を確定させる
+      if (hakaiState.turn >= 1 && hakaiState.turn <= 8) {
+        hakaiState.history[hakaiState.turn - 1] = "闇";
+      }
+      updateFormDisplays();
+
+      // 次のターンへ
+      hakaiState.turn++;
+      updateTurnDisplay();
+
+      // 入力欄はクリアしておく
+      for (let i = 1; i <= 5; i++) {
+        const inp = el(`dmg-${i}`);
+        if (inp) inp.value = "";
+      }
+
+      // ターン終了後は ①ダメージスロットにフォーカスを戻す
+      const firstInput = el("dmg-1");
+      if (firstInput) {
+        firstInput.focus();
+        firstInput.select();
+      }
+
+      return;
+    }
+
+    // ★通常時：
+    // 「いまのターン」のダメージから推察された形態を
+    // 右スロットの「そのターンの行」に確定する。
+    //
+    // 1T目は常に①のままでよい仕様なので、
+    // 書き込むのは 2T目以降だけにする。
+    if (hakaiState.turn >= 2 && hakaiState.turn <= 8) {
+      hakaiState.history[hakaiState.turn - 1] = hakaiState.currentForm;
+    }
+    updateFormDisplays();
+
+    // 次のターンへ
+    hakaiState.turn++;
+    updateTurnDisplay();
+
+    // 入力欄クリア
+    for (let i = 1; i <= 5; i++) {
+      const inp = el(`dmg-${i}`);
+      if (inp) inp.value = "";
+    }
+
+    // ターン終了後は ①ダメージスロットにフォーカスを戻す
+    const firstInput = el("dmg-1");
+    if (firstInput) {
+      firstInput.focus();
+      firstInput.select();
+    }
+
+    // 次ターン開始時点では、右スロットの「そのターンの行」はまだ「？」のまま。
+    // そのターンのダメージ入力が進み、形態推察が一意に確定したら
+    // endTurn() 呼び出し時にそのターンの行へ書き込まれる。
+  }
+
+
+
+  function revertLastEdit() {
+    // 同一ターン内のダメージ入力履歴がなければ何もしない
+    if (!Array.isArray(hakaiState.editHistory) || hakaiState.editHistory.length === 0) {
+      return;
+    }
+
+    // 直近のダメージ入力1件分を取り出す
+    const last = hakaiState.editHistory.pop(); // { slot, prevHp }
+
+    // 対象スロットの入力をクリアしつつ、カーソルも戻す
+    const input = el(`dmg-${last.slot}`);
+    if (input) {
+      input.value = "";
+
+      // カーソルを「最後に巻き戻したスロット」に戻す
+      input.focus();
+      input.select();
+    }
+
+    // HPを巻き戻す
+    hakaiState.hp = last.prevHp;
+    updateHpDisplay();
+
+    // 入力が1つ減ったので、現在形態も改めて推察し直す
+    if (!hakaiState.darkMode) {
+      hakaiState.currentForm = estimateFormFromInputs();
+      updateFormDisplays();
+    }
+
+    // 既存フィールドも履歴の末尾に合わせて更新（使っていないが整合性のため）
+    if (hakaiState.editHistory.length > 0) {
+      const prev = hakaiState.editHistory[hakaiState.editHistory.length - 1];
+      hakaiState.lastEdit = prev.slot;
+      hakaiState.lastHp = prev.prevHp;
+    } else {
+      hakaiState.lastEdit = null;
+      hakaiState.lastHp = null;
+    }
+  }
+
+
+
+  function beastBreak() {
+    // 獣魔撃破ボタン：本体HPに500ダメージ（そのまま）
+    hakaiState.lastHp = hakaiState.hp;
+    hakaiState.lastEdit = null; // スロット入力ではないので lastEdit はクリア
+    const nextHp = hakaiState.hp - 500;
+    hakaiState.hp = nextHp < 0 ? 0 : nextHp;
+    updateHpDisplay();
+  }
+
+  function enterDarkMode() {
+    hakaiState.darkMode = true;
+    hakaiState.currentForm = "闇";
+
+    // 以降のターンは履歴上も闇で塗りつぶす前提。
+    for (let i = 0; i < 8; i++) {
+      if (hakaiState.history[i] === "？") {
+        hakaiState.history[i] = "闇";
+      }
+    }
+    updateFormDisplays();
+  }
+
+  function resetAll() {
+    hakaiState.hp = 7500;
+    hakaiState.turn = 1;
+    hakaiState.lastEdit = null;
+    hakaiState.lastHp = null;
+    hakaiState.editHistory = []; // リターン用履歴もリセット
+    hakaiState.history = ["①","？","？","？","？","？","？","？"];
+    hakaiState.currentForm = "①";
+    hakaiState.darkMode = false;
+
+
+    for (let i = 1; i <= 5; i++) {
+      const inp = el(`dmg-${i}`);
+      if (inp) inp.value = "";
+    }
+
+    rebuildPatternDamageTable();
+    updateHpDisplay();
+    updateTurnDisplay();
+    updateFormDisplays();
+  }
+
+  // =========================================================
+  // 9. イベント初期化
+  // =========================================================
+
+  function initHakaiLogic() {
+    // まず乱数幅テーブルを構築
+    rebuildPatternDamageTable();
+
+    // ダメージ入力欄
+    for (let slot = 1; slot <= 5; slot++) {
+      const inp = el(`dmg-${slot}`);
+      if (!inp) continue;
+
+      inp.addEventListener("change", function () {
+        handleDamageInputChange(slot);
+      });
+      inp.addEventListener("keydown", function (e) {
+        if (e.key === "Enter") {
+          e.preventDefault();
+
+          if (slot < 5) {
+            // ①〜④までは次のダメージスロットへフォーカス
+            const nextInput = el(`dmg-${slot + 1}`);
+            if (nextInput) {
+              nextInput.focus();
+              nextInput.select();
+            }
+          } else {
+            // ⑤スロットで Enter → 「ターン終了」ボタンへフォーカス
+            const endTurnBtn = el("endturn-btn");
+            if (endTurnBtn) {
+              endTurnBtn.focus();
+            }
+          }
+        }
+      });
+    }
+
+    // ボタン類
+    const beastBtn = el("beast-btn");
+    if (beastBtn) {
+      beastBtn.addEventListener("click", function () {
+        beastBreak();
+      });
+    }
+
+    const returnBtn = el("return-btn");
+    if (returnBtn) {
+      returnBtn.addEventListener("click", function () {
+        revertLastEdit();
+      });
+    }
+
+    const darkBtn = el("dark-btn");
+    if (darkBtn) {
+      darkBtn.addEventListener("click", function () {
+        enterDarkMode();
+      });
+    }
+
+    const endTurnBtn = el("endturn-btn");
+    if (endTurnBtn) {
+      endTurnBtn.addEventListener("click", function () {
+        endTurn();
+      });
+
+      // フォーカスが「ターン終了」ボタン上にある状態で Enter でもターン終了できるようにする
+      endTurnBtn.addEventListener("keydown", function (e) {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          endTurnBtn.click();
+        }
+      });
+    }
+
+
+    const resetBtn = el("reset-btn");
+    if (resetBtn) {
+      resetBtn.addEventListener("click", function () {
+        resetAll();
+      });
+    }
+
+    // 陣形・キャラ・剣レベル変更時の再計算
+    attachPartyDataChangeHandlers();
+
+    // 初期表示
+    updateHpDisplay();
+    updateTurnDisplay();
+    updateFormDisplays();
+  }
+
+  // =========================================================
+  // 10. 全体初期化（HTML生成＋ロジック初期化）
+  // =========================================================
+
+  function initHakaiBoxFromJs() {
+    // HTML側は <div id="hakai-bottom-root"></div> だけ残しておいてください。
+    var root = document.getElementById('hakai-bottom-root');
+    if (!root) return;
+
+    // 中身を JS でまるごと生成
+    root.innerHTML = buildHakaiBoxHtml();
+
+    // 生成後にロジック初期化
+    initHakaiLogic();
+  }
+
+  let initialized = false;
+
+  function ensureInitialized() {
+    if (initialized) return;
+    initialized = true;
+    initHakaiBoxFromJs();
+  }
+
+  // 乱数幅テーブルの再構築だけを外部から呼び出せるように公開
+  global.rs3_box_hakai_v2 = global.rs3_box_hakai_v2 || {};
+  global.rs3_box_hakai_v2.refreshPatternTable = function () {
+    rebuildPatternDamageTable();
+  };
+  global.rs3_box_hakai_v2.debugGetPatternTable = function () {
+    return JSON.parse(JSON.stringify(hakaiState.patternTable || null));
+  };
+  global.rs3_box_hakai_v2.debugDump = function () {
+    return {
+      formation: (global.rs3_rta_v2_bunshin_link &&
+                  typeof global.rs3_rta_v2_bunshin_link.getFormationState === "function" &&
+                  global.rs3_rta_v2_bunshin_link.getFormationState()) || null,
+      patternTable: hakaiState.patternTable,
+      currentForm: hakaiState.currentForm,
+      history: hakaiState.history.slice()
+    };
+  };
+
+  // --- hakai_v2_js 形態推察・ログ 修正ここから
+  // テスト用：任意の patternTable とダメージ入力を与えて形態推察を実行する
+  global.rs3_box_hakai_v2._testEstimate = function (patternTable, damageMap) {
+    const prevTable = hakaiState.patternTable;
+    const prevMeta = hakaiState.patternMeta;
+    const prevForm = hakaiState.currentForm;
+
+    hakaiState.patternTable = patternTable;
+    hakaiState.patternMeta = {
+      roles: [null, null, null, null, null],
+      swordLevels: [0, 0, 0, 0, 0]
+    };
+    hakaiState.currentForm = "①";
+
+    const map = damageMap || {};
+    const stubInputs = {};
+    for (let i = 1; i <= 5; i++) {
+      const key = `dmg-${i}`;
+      const v = map[i];
+      stubInputs[key] = { value: (v != null ? String(v) : "") };
+    }
+
+    const originalGetElementById = document.getElementById.bind(document);
+    document.getElementById = function (id) {
+      if (Object.prototype.hasOwnProperty.call(stubInputs, id)) {
+        return stubInputs[id];
+      }
+      return originalGetElementById(id);
+    };
+
+    try {
+      return computeFormEstimation();
+    } finally {
+      document.getElementById = originalGetElementById;
+      hakaiState.patternTable = prevTable;
+      hakaiState.patternMeta = prevMeta;
+      hakaiState.currentForm = prevForm;
+    }
+  };
+  // --- hakai_v2_js 形態推察・ログ 修正ここまで
+  global.rs3_box_hakai_v2.init = function () {
+    ensureInitialized();
+  };
+
+  // 外部から明示的に init を呼ぶ前提に切り替え
+})();
+
+  </script>
+  <script>
+(function () {
+  document.addEventListener("DOMContentLoaded", function () {
+    if (typeof initCharSlotBox === "function") {
+      initCharSlotBox("rta-v2-top-lm");
+    }
+
+    // DOM構築 → キャラスロットHTML生成 → RS3_CHAR_DATA 初期化の順序を保証
+    if (window.rs3_rta_v2_char_module &&
+        typeof window.rs3_rta_v2_char_module.init === "function") {
+      window.rs3_rta_v2_char_module.init();
+    }
+
+    if (window.rs3_rta_v2_bunshin_link &&
+        typeof window.rs3_rta_v2_bunshin_link.init === "function") {
+      window.rs3_rta_v2_bunshin_link.init();
+    }
+
+    if (window.rs3_box_hakai_v2 &&
+        typeof window.rs3_box_hakai_v2.init === "function") {
+      window.rs3_box_hakai_v2.init();
+    }
+    // ------------------------------------------------------
+    // お供用リセットボタン：「起動直後の状態」に戻す
+    // ------------------------------------------------------
+    const resetBtn = document.querySelector(
+      "#rta-v2-top-lm > div > table > tbody > " +
+      "tr.rta-v2-char-row-otomo-header > " +
+      "td.support-reset-header > button"
+    );
+
+    if (resetBtn) {
+      resetBtn.addEventListener("click", function () {
+        // 「rs3_rta_v2_kidou.html」を開いた直後の状態に戻す
+        location.reload();
+      });
+    }
+
+    // ------------------------------------------------------
+    // お供レベル & フォル／ビュネHP連動
+    // ------------------------------------------------------
+    const supportCharSelect = document.getElementById("support-char");
+    const supportHpInput    = document.getElementById("support-hp");
+    const supportLvSpan     = document.getElementById("support-lv");
+    const forneusLvSpan     = document.getElementById("forneus-otomo-level-display");
+    const byuneiLvSpan      = document.getElementById("byunei-otomo-level-display");
+
+    // お供周りの要素が無ければ、ここから先は何もしない
+    if (!supportHpInput || !supportLvSpan) {
+      return;
+    }
+
+    // ハーマン／タチアナの「デフォルトHP」
+    const BASE_SUPPORT_HP = {
+      herman: 210,
+      tatiana: 65
+    };
+
+    function getCurrentSupportKey() {
+      if (!supportCharSelect) return "herman";
+      const v = supportCharSelect.value;
+      if (v === "tatiana") return "tatiana";
+      return "herman"; // デフォルトはハーマン扱い
+    }
+
+    function getBaseSupportHp() {
+      const key = getCurrentSupportKey();
+      return BASE_SUPPORT_HP[key] || 0;
+    }
+
+    // 差分 / 15 を使って お供LV を算出
+    function calcOtomoLevel(currentHp, baseHp) {
+      const diff = currentHp - baseHp;
+      if (!Number.isFinite(diff) || diff <= 0) return 0;
+      return Math.max(0, Math.floor(diff / 15));
+    }
+
+    // お供HP → お供LV → フォル／ビュネHP を反映
+    function applyOtomoLevel() {
+      const baseHp = getBaseSupportHp();
+      if (baseHp <= 0) {
+        // 基礎値がおかしい場合は全部 0 扱い
+        supportLvSpan.textContent = "0";
+        if (forneusLvSpan) forneusLvSpan.textContent = "0";
+        if (byuneiLvSpan)  byuneiLvSpan.textContent  = "0";
+        return;
+      }
+
+      let currentHp = Number(supportHpInput.value);
+      if (!Number.isFinite(currentHp) || currentHp <= 0) {
+        currentHp = baseHp;
+      }
+
+      // 「デフォルト値より小さくならない」制約
+      if (currentHp < baseHp) {
+        currentHp = baseHp;
+        supportHpInput.value = String(baseHp);
+      }
+
+      const otomoLv = calcOtomoLevel(currentHp, baseHp);
+
+      // 上部「お供LV」
+      supportLvSpan.textContent = String(otomoLv);
+
+      // 下部フォル／ビュネ側の「お供LV 表示」
+      if (forneusLvSpan) forneusLvSpan.textContent = String(otomoLv);
+      if (byuneiLvSpan)  byuneiLvSpan.textContent  = String(otomoLv);
+
+      // フォル／ビュネの最大HP更新
+      if (window.rs3_box_fb_v2) {
+        const forneusBase = 28000;
+        const byuneiBase  = 9000;
+
+        // 基礎HP + (基礎HP / 32) * お供LV を小数点以下切り捨て
+        const forneusHp = Math.floor(forneusBase + (forneusBase / 32) * otomoLv);
+        const byuneiHp  = Math.floor(byuneiBase  + (byuneiBase  / 32) * otomoLv);
+
+        if (typeof window.rs3_box_fb_v2.setForneusMaxHP === "function") {
+          window.rs3_box_fb_v2.setForneusMaxHP(forneusHp);
+        }
+        if (typeof window.rs3_box_fb_v2.setByuneiMaxHP === "function") {
+          window.rs3_box_fb_v2.setByuneiMaxHP(byuneiHp);
+        }
+      }
+    }
+
+    // お供HPのスピン＆直接入力で反映
+    supportHpInput.addEventListener("input",  applyOtomoLevel);
+    supportHpInput.addEventListener("change", applyOtomoLevel);
+
+    // お供キャラ（ハーマン／タチアナ）変更時も再計算
+    if (supportCharSelect) {
+      supportCharSelect.addEventListener("change", function () {
+        // rs3_rta_v2_char_param.js 側で基礎HPを書き換えた後に反映したいので、少し後ろにずらす
+        setTimeout(applyOtomoLevel, 0);
+      });
+    }
+
+    // 起動直後の表示を同期
+    applyOtomoLevel();
+  });
+})();
+
+  </script>
+</body>
+</html>
+
